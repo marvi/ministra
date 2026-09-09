@@ -370,7 +370,127 @@
             window.print();
         });
 
-        // Krokar för drag (pekarhändelser) hängs på här i nästa steg.
+        // ---------- Dra och släpp med pekarhändelser ----------
+
+        /*
+         * pointerdown på en bricka startar inget förrän pekaren rört sig några pixlar; ett
+         * tryck utan rörelse blir alltså ett vanligt klick. Under draget följer en kopia
+         * pekaren, dagarna tänds och tonas som vid markering, och dagen under pekaren får
+         * en ram. Släpp på en tänd dag lägger dit brickan; släpp någon annanstans avbryter.
+         */
+        const DRAG_THRESHOLD = 6;
+        let pending = null;   // {tile, x, y, pointerId, button}
+        let dragging = null;  // {tile, ghost, offsetX, offsetY}
+        let suppressNextClick = false;
+
+        root.addEventListener('pointerdown', function (event) {
+            const pickButton = event.target.closest('.tile-pick');
+            if (!pickButton || event.button !== 0) {
+                return;
+            }
+            suppressNextClick = false;
+            pending = {
+                tile: pickButton.closest('.tile'),
+                button: pickButton,
+                x: event.clientX,
+                y: event.clientY,
+                pointerId: event.pointerId
+            };
+        });
+
+        root.addEventListener('pointermove', function (event) {
+            if (pending && !dragging && pending.pointerId === event.pointerId) {
+                if (Math.hypot(event.clientX - pending.x, event.clientY - pending.y) < DRAG_THRESHOLD) {
+                    return;
+                }
+                startDrag(pending, event);
+            }
+            if (dragging && event.pointerId === pending.pointerId) {
+                moveGhost(event);
+                markOver(dayUnder(event));
+            }
+        });
+
+        root.addEventListener('pointerup', function (event) {
+            if (dragging && pending && event.pointerId === pending.pointerId) {
+                const day = dayUnder(event);
+                endDrag();
+                if (day) {
+                    drop(selected, day);
+                } else {
+                    clearSelection();
+                }
+                // Webbläsaren skickar ett click efter pointerup; det ska inte markera om.
+                suppressNextClick = true;
+            }
+            pending = null;
+        });
+
+        root.addEventListener('pointercancel', function () {
+            if (dragging) {
+                endDrag();
+                clearSelection();
+            }
+            pending = null;
+        });
+
+        function startDrag(start, event) {
+            select(start.tile);
+            const rect = start.tile.getBoundingClientRect();
+            const ghost = start.tile.cloneNode(true);
+            ghost.classList.add('ghost');
+            ghost.classList.remove('selected');
+            ghost.style.width = rect.width + 'px';
+            ghost.setAttribute('aria-hidden', 'true');
+            document.body.appendChild(ghost);
+            dragging = {
+                tile: start.tile,
+                ghost: ghost,
+                offsetX: start.x - rect.left,
+                offsetY: start.y - rect.top
+            };
+            start.tile.classList.add('dragging');
+            try {
+                start.button.setPointerCapture(start.pointerId);
+            } catch (ignored) {
+                // Utan capture fungerar draget ändå så länge pekaren stannar i sidan.
+            }
+            moveGhost(event);
+        }
+
+        function moveGhost(event) {
+            dragging.ghost.style.left = (event.clientX - dragging.offsetX) + 'px';
+            dragging.ghost.style.top = (event.clientY - dragging.offsetY) + 'px';
+        }
+
+        /** Den tända dagen under pekaren, eller null. Kopian släpper igenom pekaren. */
+        function dayUnder(event) {
+            const element = document.elementFromPoint(event.clientX, event.clientY);
+            const day = element && element.closest('.schedule-day');
+            return day && day.classList.contains('target') ? day : null;
+        }
+
+        function markOver(day) {
+            days.forEach(function (candidate) {
+                candidate.classList.toggle('over', candidate === day);
+            });
+        }
+
+        function endDrag() {
+            dragging.ghost.remove();
+            dragging.tile.classList.remove('dragging');
+            dragging = null;
+            markOver(null);
+        }
+
+        root.addEventListener('click', function (event) {
+            if (suppressNextClick) {
+                suppressNextClick = false;
+                event.stopImmediatePropagation();
+                event.preventDefault();
+            }
+        }, true);
+
         root.ministra = { select: select, drop: drop, clearSelection: clearSelection, accepts: accepts, asText: asText };
     });
 })();
