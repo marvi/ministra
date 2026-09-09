@@ -10,10 +10,17 @@
     </parent>
     <groupId>io.marvi</groupId>
     <artifactId>ministra</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0-SNAPSHOT</version>
     <name>ministra</name>
     <description>Samlar in tillgänglighet från frivilliga inför söndagsgudstjänster</description>
-    <properties>
+    <scm>
+      <connection>scm:git:git://github.com/marvi/ministra.git</connection>
+      <developerConnection>scm:git:ssh://git@github.com/marvi/ministra.git</developerConnection>
+      <url>https://github.com/marvi/ministra</url>
+  </scm>
+
+
+  <properties>
         <java.version>25</java.version>
     </properties>
     <dependencies>

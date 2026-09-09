@@ -48,6 +48,10 @@ Konsekvenser att arbeta efter:
 Följdbesluten är fattade: avbilden byggs enligt D-032, Podman körs rootless enligt D-034,
 och vägen till värdens Postgres beskrivs i D-015.
 
+> D-015 och D-034 är sedan ersatta av
+> [D-045](#d-045--postgres-18-på-värden-och-drift-via-vps-deploy): servern provisioneras av
+> vps-deploy, som genererar quadleten och sköter databasen. Kärnan här gäller fortfarande.
+
 ## D-003 — Server-renderad HTML med jte och htmx
 **2026-09-09 · Gäller**
 
@@ -258,7 +262,12 @@ skulle vara snävare. Det är accepterat på en server vi själva driftar — g�
 det databaslösenordet och SMTP-lösenordet som flyttas först.
 
 ## D-015 — Befintlig Postgres 16 på värden, delad instans
-**2026-09-09 · Gäller**
+**2026-09-09 · ERSATT av [D-045](#d-045--postgres-18-på-värden-och-drift-via-vps-deploy).**
+
+> Instansen som beskrivs fanns inte på servern ministra faktiskt driftas på. Postgres finns
+> nu där, version 18, provisionerad av vps-deploy. Kraven på egen roll, egen databas,
+> `ddl-auto=validate` och Flyway gäller oförändrade; det som föll var `AddHost`,
+> `pg_hba`-ändringen för hand och major 16.
 
 Appen använder en **redan körande** PostgreSQL-instans i produktion:
 `postgresql16-server 16.15` (PGDG), installerad på värden — inte i en container, inte
@@ -622,7 +631,12 @@ Valet är givet: Flyway används redan i andra projekt, och Hibernates `ddl-auto
 Migreringen körs av appen vid uppstart, se D-039.
 
 ## D-034 — Rootless Podman
-**2026-09-09 · Gäller**
+**2026-09-09 · ERSATT av [D-045](#d-045--postgres-18-på-värden-och-drift-via-vps-deploy).**
+
+> vps-deploy kör quadlets som root under `/etc/containers/systemd/` men med `UserNS=auto`,
+> `DropCapability=all` och skrivskyddat rotfilsystem, vilket ger samma isolering utan
+> linger-användare. Anteckningen om Testcontainers och `podman.socket` gäller fortfarande för
+> lokal utveckling.
 
 Containern körs rootless, som en vanlig tjänsteanvändare.
 
@@ -988,3 +1002,58 @@ Efter en mockup av svarsvyn på mobil. Det mesta i den är antaget; två saker �
 **Fonter** är oförändrade: Georgia i rubrikerna, systemets sans i brödtexten, noll byte
 att ladda. Vill vi ha ett eget ansikte är Source Serif 4 (SIL OFL) för rubrikerna det
 val som stämmer med självhostningskravet; brödtexten stannar i systemets sans.
+
+## D-045 — Postgres 18 på värden och drift via vps-deploy
+**2026-09-09 · Gäller**
+
+Servern provisioneras av **vps-deploy**, Ansible-repot som äger den. Ministra är där en
+tjänst av typen `container` i `services.yml`, som lektionarium: vps-deploy genererar
+quadleten, Caddy-vhosten med certifikat, env-filerna och auditreglerna. Det här repot
+innehåller ingen unit-fil. Ersätter D-015 och D-034.
+
+Databasen är en **central PostgreSQL 18** på värden (PGDG-paket), också provisionerad av
+vps-deploy. Ministra får en egen roll och en egen databas genom `database: true` i
+services.yml; rollen äger databasen och når ingenting annat.
+
+Skälen:
+
+- **En sanning om servern.** vps-deploy vet redan vad som körs, hur Caddy är uppsatt, vad
+  brandväggen släpper igenom och hur en tjänst avvecklas. En handskriven rootless-quadlet
+  vid sidan av hade varit en andra sanning som gradvis glider isär från den första.
+- **Central databas framför en per pod.** Backupen blir en timer för alla databaser över
+  lokal socket, `psql` fungerar från tailnetet utan `podman exec`, och minnet delas. Priset
+  är att alla appar följer samma major. Det accepteras: en major-uppgradering är ändå en
+  medveten dump-och-återställ-övning.
+- **Version 18** eftersom det är den aktuella majorn när instansen sätts upp. Testerna kör
+  `postgres:18` via Testcontainers så att de matchar.
+
+Konsekvenser:
+
+- **Konfigurationen är fortfarande bara miljövariabler** (D-014), nu i tre filer som
+  quadleten läser i ordning: `/etc/ministra.env` genereras ur `environment:` i services.yml
+  och innehåller allt som inte är hemligt; `/etc/ministra.db.env` innehåller
+  `MINISTRA_DB_PASSWORD`, genererat på servern första gången; `/etc/ministra.local.env`
+  fylls i för hand med SMTP-inloggningen och rörs aldrig av Ansible. En senare fil vinner.
+  Alla variabler är dokumenterade i `deploy/README.md`.
+- **Containern når databasen på `host.containers.internal`**, som podman själv lägger in i
+  containerns `/etc/hosts`. Inget `AddHost`, ingen `pg_hba`-ändring för hand.
+- **Databasen nås från tailnetet men aldrig utifrån.** Postgres lyssnar på alla adresser
+  eftersom `podman0` och `tailscale0` inte finns vid uppstart. Brandväggen håller 5432
+  stängd på det externa interfacet, och `pg_hba.conf` känner bara podman-nätet och
+  tailnetet. Två oberoende lager.
+- **Rollen äger sin databas**, så Flyway vid uppstart (D-039) kräver inga rättigheter för
+  hand. `ddl-auto=validate` står kvar.
+- **Release** är en tagg (`tools/release.sh`). Flödet bygger och publicerar avbilden
+  (D-032), triggar `podman auto-update` över tailnetet och väntar tills `/actuator/health`
+  svarar UP genom Caddy. Rullar podman tillbaka blir flödet rött.
+- **Backup** sköts av vps-deploy: nattliga `pg_dump` per databas plus roller, fjorton dagars
+  historik.
+
+Avvisat:
+
+- **Egen Postgres i en pod tillsammans med appen.** Klar att köra, men förlorade på backup
+  och åtkomst, se ovan.
+- **Dela Umamis Postgres.** Två appar i en instans som en av dem äger är exakt den delade
+  situation som D-015 försökte disciplinera fram rättigheter i.
+- **Rootless podman** (D-034). vps-deploy:s rootful quadlets med `UserNS=auto` ger samma
+  isolering utan linger-användare, och passar resten av servern.

@@ -62,3 +62,57 @@ jobs:
             .
           docker push "$image:$VERSION"
           docker push "$image:latest"
+
+      # Servern hämtar nya avbilder med podman-auto-update.timer en gång om dygnet. Det här
+      # triggar det direkt över tailnetet, så att releasen är ute när flödet är grönt, och
+      # kontrollerar sedan att den nya versionen svarar. Mönstret kommer från vps-deploy
+      # (workflows/container-ghcr.yml).
+      #
+      # Kräver i repots inställningar på GitHub:
+      #   secrets  TS_OAUTH_CLIENT_ID, TS_OAUTH_SECRET   Tailscale OAuth-klient med tag:ci
+      #   vars     DEPLOY_HOST                           serverns namn i tailnetet
+      - name: Anslut till tailnetet
+        uses: tailscale/github-action@v3
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: Rulla ut på servern
+        env:
+          HOST: ${{ vars.DEPLOY_HOST }}
+        run: |
+          set -euo pipefail
+          SSH="ssh -o StrictHostKeyChecking=accept-new deploy@$HOST"
+
+          # Direkt och inte via systemctl: utdatan visar om podman rullade tillbaka.
+          # OBS: auto-update omfattar alla containrar på värden, inte bara ministra.
+          echo "== podman auto-update =="
+          OUT=$($SSH "sudo /usr/bin/podman auto-update" 2>&1 | tee /dev/stderr)
+          if grep -qi 'rolled back' <<<"$OUT"; then
+            echo "::error::podman rullade tillbaka – den nya avbilden startade inte."
+            $SSH "journalctl -u ministra.service -n 50 --no-pager" || true
+            exit 1
+          fi
+
+          if ! $SSH "systemctl is-active --quiet ministra.service"; then
+            echo "::error::ministra.service är inte aktiv efter utrullningen."
+            $SSH "journalctl -u ministra.service -n 50 --no-pager" || true
+            exit 1
+          fi
+
+      # Uniten är aktiv så fort containern startat, innan JVM:en och Flyway är klara.
+      # Hälsan genom Caddy avgör om releasen faktiskt tar emot trafik.
+      - name: Vänta på att den nya versionen svarar
+        env:
+          URL: https://ministra.marvi.work/actuator/health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS --max-time 5 "$URL" | grep -q '"UP"'; then
+              echo "Frisk efter $((i * 5)) sekunder."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::$URL svarar inte UP efter 150 sekunder."
+          exit 1

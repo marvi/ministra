@@ -96,7 +96,7 @@ Kräver Java 25 och Podman. Java-versionen styrs av `mise.toml`; har du
 # Postgres, och då kopplar appen tyst upp sig mot fel databas.
 podman run --rm -d --name ministra-db -p 5433:5432 \
   -e POSTGRES_DB=ministra -e POSTGRES_USER=ministra -e POSTGRES_PASSWORD=ministra \
-  docker.io/library/postgres:16
+  docker.io/library/postgres:18
 
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
@@ -140,11 +140,11 @@ Paketen följer funktion, inte lager. Det finns ingen `controller`- eller `servi
 ## Drift
 
 En OCI-avbild byggs av GitHub Actions vid varje tagg och publiceras till
-`ghcr.io/marvi/ministra`. Den körs som en rootless Podman-quadlet under systemd. Se
-[deploy/README.md](deploy/README.md) för uppsättningen och
-[deploy/ministra.env.example](deploy/ministra.env.example) för konfigurationen.
+`ghcr.io/marvi/ministra`. Servern provisioneras av vps-deploy, som kör avbilden som en
+Podman-quadlet under systemd bakom Caddy, mot en Postgres 18 på värden. Se
+[deploy/README.md](deploy/README.md) för uppsättningen och alla miljövariabler.
 
-All konfiguration kommer från miljövariabler i en env-fil. Loggarna går till stdout och
+All konfiguration kommer från miljövariabler i env-filer. Loggarna går till stdout och
 läses med `journalctl`.
 
 ## Dokumentation

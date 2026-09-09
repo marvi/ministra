@@ -11,7 +11,7 @@ arkitekturändringar** — flera saker som ser konstiga ut är medvetna val.
 # Databas för lokal utveckling
 podman run --rm -d --name ministra-db -p 5433:5432 \
   -e POSTGRES_DB=ministra -e POSTGRES_USER=ministra -e POSTGRES_PASSWORD=ministra \
-  docker.io/library/postgres:16
+  docker.io/library/postgres:18
 
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev   # http://localhost:8080
 ./mvnw test                                             # alla tester
@@ -33,7 +33,7 @@ Postgres, och då kopplar appen tyst upp sig mot fel databas.
 | Spring Boot 4.0.8, Java 25          | `spring-boot-starter-webmvc`                                                                  |
 | **jte 3.2.4**                       | server-renderade mallar i `src/main/jte`, kompileras av `jte-maven-plugin`                    |
 | **htmx 5.1.0**                      | `io.github.wimdeblauwe:htmx-spring-boot`                                                      |
-| PostgreSQL **16** + Spring Data JPA | befintlig delad instans på värden — se [D-001](docs/decisions.md), [D-015](docs/decisions.md) |
+| PostgreSQL **18** + Spring Data JPA | central instans på värden, egen roll och databas — se [D-001](docs/decisions.md), [D-045](docs/decisions.md) |
 | `spring-boot-starter-mail`          | utgående post via SMTP till **AhaSend** — se [D-029](docs/decisions.md)                       |
 | `io.marvi:lektionarium-api:2.7`     | kyrkoårskalender, från `https://maven.marvi.work`                                             |
 
@@ -87,17 +87,20 @@ Målet är inte minsta möjliga app utan en app där det är **svårt att göra 
 Appen körs som en Podman-quadlet under systemd på egen server — se [D-002](docs/decisions.md).
 Tre konsekvenser som påverkar koden direkt:
 
-- All konfiguration läses från miljövariabler, som kommer från en **env-fil** via
+- All konfiguration läses från miljövariabler, som kommer från **env-filer** via
   `EnvironmentFile=` i quadleten — inte från `Environment=`-rader i unit-filen.
-  Ingen konfigurationsfil inuti imagen, inget `application-prod.properties`.
+  Ingen konfigurationsfil inuti imagen, inget `application-prod.properties`. En ny
+  inställning får `${NAMN:default}` i `application.properties` och en rad i
+  [deploy/README.md](deploy/README.md).
 - All loggning går till stdout/stderr, så `journalctl` fungerar. Skriv aldrig till loggfil.
 - Deployerbar artefakt är en OCI-image, byggd av GitHub Actions till
   `ghcr.io/marvi/ministra` från en handskriven `Dockerfile`
   ([D-032](docs/decisions.md)). Mönstret finns i
   [marvi/lektionarium](https://github.com/marvi/lektionarium) — följ det.
-- **Rootless Podman** ([D-034](docs/decisions.md)). Quadleten ligger under
-  `~/.config/containers/systemd/`, portar under 1024 går inte att binda, och
-  `loginctl enable-linger` måste vara på.
+- **Servern provisioneras av vps-deploy** ([D-045](docs/decisions.md)). Ministra är en
+  `container`-post i dess `services.yml`, och quadleten genereras därifrån — det här repot
+  innehåller ingen unit-fil. Databasen är en Postgres 18 på värden, nådd via
+  `host.containers.internal`. Rollen äger sin databas och inget annat.
 - Schemamigreringar med **Flyway**, ren SQL i `src/main/resources/db/migration`
   ([D-033](docs/decisions.md)). Körs av appen vid uppstart ([D-039](docs/decisions.md)).
   Handkör aldrig DDL.
@@ -108,9 +111,9 @@ Tre konsekvenser som påverkar koden direkt:
   fast utan att ge något.
 - **Alla mejl är ren text**, aldrig HTML, och formuleringarna är fastställda i
   [D-035](docs/decisions.md). Skriv inte om dem på egen hand.
-- Databasen är en **delad produktionsinstans på värden** ([D-015](docs/decisions.md)).
-  `ddl-auto=validate`, aldrig `update`. Schemaändringar sker med versionerade
-  migreringar.
+- Databasen är en **central Postgres 18 på värden** ([D-045](docs/decisions.md)) där
+  ministra äger sin egen databas och inget annat. `ddl-auto=validate`, aldrig `update`.
+  Schemaändringar sker med versionerade migreringar.
 
 ## Språk
 
@@ -281,7 +284,7 @@ Lägg inte till fler jobb utan att fråga.
 
 - Domänlogik testas som ren JUnit utan Spring-kontext.
 - Webblagret med `@WebMvcTest`. Persistens med `@DataJpaTest` + Testcontainers mot
-  riktig Postgres, inte H2. Pinna `postgres:16` — produktion kör 16.15.
+  riktig Postgres, inte H2. Pinna `postgres:18` — produktion kör major 18.
 - Ärv `PostgresTest` för allt som behöver databas. Containern startas i ett statiskt block
   och delas mellan testklasser. Använd **inte** `@Testcontainers` och `@Container` — då
   stoppas den efter första klassen och nästa får vänta ut anslutningspoolens timeout.
