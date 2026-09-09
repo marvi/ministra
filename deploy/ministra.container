@@ -1,0 +1,47 @@
+# Quadlet för Ministra. Rootless (D-034), så filen hör hemma i
+# ~/.config/containers/systemd/ministra.container och hanteras med systemctl --user.
+#
+# Kom ihåg:
+#   loginctl enable-linger $USER      annars stoppas tjänsten när sessionen tar slut
+#   systemctl --user daemon-reload    efter varje ändring av den här filen
+#   systemctl --user start ministra
+
+[Unit]
+Description=Ministra
+After=network-online.target
+
+[Container]
+Image=ghcr.io/marvi/ministra:latest
+
+# All konfiguration kommer härifrån. Inga Environment=-rader (D-014).
+EnvironmentFile=%h/.config/ministra/ministra.env
+
+# Rootless: hög port ut mot reverse proxyn, som terminerar TLS och sätter
+# X-Forwarded-For — utan den slår hastighetsgränsen mot alla på en gång (D-022).
+PublishPort=127.0.0.1:8080:8080
+
+# Databasen kör på värden, inte i en container. Kräver att pg_hba.conf släpper in
+# podman-nätets adress (D-015).
+AddHost=host.containers.internal:host-gateway
+
+# Hälsokontrollen finns i avbilden och pekar på /actuator/health.
+HealthCmd=curl -fsS http://localhost:8080/actuator/health
+HealthInterval=30s
+HealthStartPeriod=60s
+HealthRetries=3
+
+NoNewPrivileges=true
+ReadOnly=true
+# JVM:en och Spring behöver skrivbar temp; inget annat skrivs till disk (loggar går till
+# stdout, D-002).
+Tmpfs=/tmp
+
+# Låter podman-auto-update.timer hämta hem nya avbilder när en ny tagg publicerats.
+AutoUpdate=registry
+
+[Service]
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

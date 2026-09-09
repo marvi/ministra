@@ -1,0 +1,395 @@
+/*
+ * Ministra.
+ *
+ * Handskriven, inget ramverk och inget npm (D-003). Mobilen först: layouten är en
+ * enspaltig kolumn hela vägen upp, och ingenting kräver hover (D-008).
+ */
+
+:root {
+    /* Varmt papper och bläck, inte grått på vitt. */
+    --paper: #faf7f2;
+    --card: #fffdfa;
+    --ink: #22303c;
+    --ink-soft: #5c6b78;
+    --rule: #e2dbd0;
+    --accent: #4a3f7a;
+    --accent-soft: #ece9f6;
+
+    /* Trafikljus. Färgen är alltid en förstärkning, aldrig ensam bärare (D-013). */
+    --can: #2f6f4f;
+    --can-bg: #e6f2ea;
+    --maybe: #96631a;
+    --maybe-bg: #f8efdc;
+    --cannot: #9d3b3b;
+    --cannot-bg: #f7e6e6;
+
+    --radius: 10px;
+    --tap: 44px;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --paper: #16191d;
+        --card: #1e2228;
+        --ink: #e6e3dd;
+        --ink-soft: #9aa5b1;
+        --rule: #333a43;
+        --accent: #b3a7e8;
+        --accent-soft: #272338;
+
+        --can: #7fc79f;
+        --can-bg: #1c2c24;
+        --maybe: #d9ad63;
+        --maybe-bg: #2e2718;
+        --cannot: #e09292;
+        --cannot-bg: #2e1f1f;
+    }
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 1rem/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-text-size-adjust: 100%;
+}
+
+h1, h2, legend .day-name {
+    /* En serif i rubrikerna ger appen ett eget ansikte utan att hämta hem en font. */
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+    font-weight: 600;
+}
+
+h1 { font-size: 1.6rem; line-height: 1.25; margin: 0 0 .4rem; }
+h2 { font-size: 1.15rem; margin: 2rem 0 .6rem; }
+
+main {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 1rem 1rem 4rem;
+}
+
+/* ---------- Topp och fot ---------- */
+
+.topbar {
+    border-bottom: 1px solid var(--rule);
+    background: var(--card);
+}
+
+.wordmark {
+    display: inline-block;
+    padding: .9rem 1rem;
+    font-family: Georgia, "Iowan Old Style", Palatino, serif;
+    font-size: 1.1rem;
+    letter-spacing: .02em;
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.footer {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 0 1rem 3rem;
+    color: var(--ink-soft);
+    font-size: .85rem;
+}
+
+/* ---------- Text ---------- */
+
+.lede { color: var(--ink-soft); margin: 0 0 1.5rem; }
+.meta { color: var(--ink-soft); font-size: .9rem; }
+.comment {
+    background: var(--accent-soft);
+    border-radius: var(--radius);
+    padding: .8rem 1rem;
+    margin: 0 0 1.5rem;
+}
+
+/* Den här texten är beslutad ordagrant i D-013 och står alltid framme. */
+.instructions {
+    border-left: 3px solid var(--accent);
+    padding: .1rem 0 .1rem 1rem;
+    margin: 0 0 1.5rem;
+}
+
+/* ---------- Formulärfält ---------- */
+
+.field { margin: 0 0 1.2rem; }
+
+label.field-label,
+legend.field-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: .3rem;
+}
+
+.hint { display: block; font-weight: 400; color: var(--ink-soft); font-size: .9rem; }
+
+input[type=text],
+input[type=email],
+textarea,
+select {
+    width: 100%;
+    min-height: var(--tap);
+    padding: .6rem .7rem;
+    font: inherit;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+}
+
+textarea { min-height: 5rem; resize: vertical; }
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.two-up { display: grid; gap: 1rem; }
+@media (min-width: 30rem) { .two-up { grid-template-columns: 1fr 1fr; } }
+
+.error {
+    background: var(--cannot-bg);
+    color: var(--cannot);
+    border-radius: var(--radius);
+    padding: .7rem .9rem;
+    margin: 0 0 1rem;
+    font-weight: 600;
+}
+
+.field-error { color: var(--cannot); font-size: .9rem; margin: .3rem 0 0; }
+
+/* ---------- Knappar ---------- */
+
+button, .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-height: var(--tap);
+    padding: .6rem 1.2rem;
+    font: inherit;
+    font-weight: 600;
+    color: var(--card);
+    background: var(--accent);
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.button.secondary {
+    color: var(--accent);
+    background: var(--card);
+    border-color: var(--rule);
+}
+
+.button.danger { color: var(--cannot); background: var(--cannot-bg); border-color: var(--cannot); }
+
+.actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.5rem; }
+
+/* ---------- Dagslistan ---------- */
+
+.days { display: grid; gap: .8rem; margin: 0; padding: 0; border: 0; }
+
+/* Ett kort per gudstjänstdag. */
+.day {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: .9rem;
+    margin: 0;
+}
+
+.day legend { padding: 0; }
+
+.day-date { display: block; font-weight: 700; }
+.day-name { display: block; color: var(--ink-soft); font-size: .95rem; }
+
+/* Tre lika breda val. Varje träffyta är minst 44 px hög. */
+.choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; margin-top: .7rem; }
+
+.choices input { position: absolute; opacity: 0; pointer-events: none; }
+
+.choices label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .15rem;
+    min-height: var(--tap);
+    padding: .4rem .2rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    font-size: .85rem;
+    line-height: 1.2;
+    text-align: center;
+    cursor: pointer;
+}
+
+.choices .mark { font-size: 1.1rem; line-height: 1; }
+
+.choices input:focus-visible + label { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.choices input:checked + label.can { background: var(--can-bg); border-color: var(--can); color: var(--can); font-weight: 700; }
+.choices input:checked + label.maybe { background: var(--maybe-bg); border-color: var(--maybe); color: var(--maybe); font-weight: 700; }
+.choices input:checked + label.cannot { background: var(--cannot-bg); border-color: var(--cannot); color: var(--cannot); font-weight: 700; }
+
+/* ---------- Andras svar ---------- */
+
+.answers { margin: .8rem 0 0; padding: .7rem 0 0; border-top: 1px solid var(--rule); }
+.answers p { display: flex; gap: .5rem; margin: .25rem 0; font-size: .9rem; }
+.answers .mark { flex: none; font-weight: 700; }
+.answers .can .mark { color: var(--can); }
+.answers .maybe .mark { color: var(--maybe); }
+.answers .cannot .mark { color: var(--cannot); }
+.answers .none { color: var(--ink-soft); font-style: italic; }
+
+/* ---------- Admin ---------- */
+
+.admin-panel {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin: 0 0 1.5rem;
+}
+
+.link-row { margin: 0 0 1rem; }
+.link-row:last-of-type { margin-bottom: 0; }
+
+.link-row code {
+    display: block;
+    overflow-wrap: anywhere;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: .5rem .6rem;
+    margin: .3rem 0;
+    font-size: .85rem;
+}
+
+/* Bekräftelsen ligger i sidan, inte i webbläsarens confirm() (D-026). */
+.confirm { margin-top: 1rem; }
+.confirm[hidden] { display: none; }
+
+/* Text bara för skärmläsare. Svaren är grupperade per färg, och färgen får aldrig vara
+   den enda bäraren av innebörden — därför sägs den ut här. */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ---------- Ta bort dagar ---------- */
+
+.day-toggles { list-style: none; margin: 0 0 1.5rem; padding: 0; }
+
+.day-toggles li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .8rem;
+    min-height: var(--tap);
+    padding: .5rem .8rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--card);
+    margin-bottom: .4rem;
+    font-size: .9rem;
+}
+
+.day-toggles.removed li { opacity: .7; }
+
+.day-toggles form { flex: none; margin: 0; }
+
+button.small { min-height: 36px; padding: .3rem .8rem; font-size: .85rem; }
+
+/* ---------- Välja dagar innan förfrågan skapas ---------- */
+
+.day-picks { list-style: none; margin: 0 0 1.5rem; padding: 0; }
+
+.day-picks li { margin-bottom: .4rem; }
+
+/* Kryssrutan bär tillståndet för hjälpmedel; hela raden är etiketten man trycker på. */
+.day-picks input { position: absolute; opacity: 0; pointer-events: none; }
+
+.day-picks label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .8rem;
+    min-height: var(--tap);
+    padding: .5rem .5rem .5rem .9rem;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    cursor: pointer;
+}
+
+.day-picks input:focus-visible + label { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.pick-text { display: flex; flex-wrap: wrap; gap: .1rem .6rem; }
+.pick-date { font-weight: 700; }
+.pick-name { color: var(--ink-soft); font-size: .95rem; }
+
+/* Knappen till höger säger vad ett klick gör — inte vilket tillstånd raden har. Att den
+   ser ut som en knapp är hela poängen: utan den läses raden som en punktlista. */
+.pick-action {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    min-height: 36px;
+    padding: .25rem .7rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    font-size: .85rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.pick-icon { font-size: 1rem; line-height: 1; margin-right: .35rem; }
+
+/* Med i listan: dämpad knapp som erbjuder att ta bort. */
+.pick-add { display: none; }
+.day-picks input:checked + label .pick-action { color: var(--ink-soft); }
+
+/* Bortvald: raden dämpas och stryks över, och knappen bjuder in till att lägga tillbaka.
+   Genomstrykningen finns för att skillnaden inte ska vara enbart färg. */
+.day-picks input:not(:checked) + label { opacity: .6; }
+.day-picks input:not(:checked) + label .pick-date,
+.day-picks input:not(:checked) + label .pick-name { text-decoration: line-through; }
+.day-picks input:not(:checked) + label .pick-remove { display: none; }
+.day-picks input:not(:checked) + label .pick-add { display: inline-flex; align-items: center; }
+.day-picks input:not(:checked) + label .pick-action {
+    opacity: 1;
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+/* Pekdon får en antydan; på pekskärm händer ingenting, och inget hänger på det. */
+@media (hover: hover) {
+    .day-picks label:hover { border-color: var(--accent); }
+    .day-picks label:hover .pick-action { border-color: var(--accent); color: var(--accent); }
+}
+
+/* ---------- Lägga till ett eget datum ---------- */
+
+.add-day { margin-bottom: 2rem; }
+
+.add-day-row { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+.add-day-row input[type=date] { flex: 1 1 12rem; width: auto; }
+.add-day-row button { flex: none; }

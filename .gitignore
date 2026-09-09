@@ -38,3 +38,10 @@ target/
 
 ### jte ###
 /jte-classes/
+
+### Lokal konfiguration och hemligheter ###
+*.env
+.env
+.env.*
+!*.env.example
+ministra.env
