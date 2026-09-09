@@ -12,8 +12,8 @@ Den som ansvarar för söndagens förbedjare behöver veta vilka söndagar var o
 kan. Samma sak gäller textläsarna, ministranterna, kyrkvärdarna och lovsångsledarna.
 Doodle löste det förr, men duger inte längre.
 
-Ministra gör en sak: samlar in svaren. Att sedan bestämma vem som faktiskt läser texten
-den 18 oktober gör en människa, med listan framför sig.
+Ministra samlar in svaren och kan ge ett förslag på fördelning. Att sedan bestämma vem
+som faktiskt läser texten den 18 oktober gör en människa, med listan framför sig.
 
 ## Så fungerar det
 
@@ -43,8 +43,10 @@ hela poängen, att se var luckorna finns.
 
 Medvetna begränsningar, inte saker som saknas:
 
-- **Fördelar inte personer på dagar.** Appen samlar in tillgänglighet. Schemaläggningen
-  gör en människa.
+- **Bestämmer inte schemat.** Skaparen kan be om ett förslag på fördelning när minst tre
+  har svarat, och flytta om i det tills det stämmer. Men förslaget är ett hjälpmedel:
+  avgörandet är skaparens, gruppen ser det aldrig, och appen sparar det inte. Schemat tar
+  man med sig som text på urklipp eller en utskrift.
 - **Räknar inte.** Den vet inte hur många som behövs per dag eller hur många som fått
   länken, så det finns ingen förloppsindikator och ingen varning för otäckta dagar.
 - **Svar går inte att ändra.** Utan konton finns ingen säker väg tillbaka till just ditt

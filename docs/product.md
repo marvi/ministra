@@ -129,13 +129,19 @@ påminnelsemejl skulle bara störa.
 
 ## Vad appen inte gör
 
-Appen **fördelar inte** personer på dagarna. Den samlar in tillgänglighet. Att välja
-vem som faktiskt läser texten den 18 oktober gör en människa, med listan framför sig.
+Appen **bestämmer inte schemat**. Den samlar in tillgänglighet och kan, när minst tre
+har svarat, ge skaparen ett förslag på fördelning att flytta om i (D-046). Förslaget är ett
+hjälpmedel: att välja vem som faktiskt läser texten den 18 oktober gör en människa, med
+listan framför sig. Förslaget sparas inte och visas aldrig för gruppen; skaparen tar det
+med sig som text på urklipp eller en utskrift.
+
+Appen vet inte heller hur många som behövs per dag. Skaparen anger det när förslaget
+tas fram, och det lagras inte.
 
 Inte i denna version, men tänkbara vidareutvecklingar:
 
-- Hjälp åt skaparen att fördela dagarna utifrån svaren.
 - En layoutad PDF för utskrift.
+- Att spara eller dela ett färdigt schema.
 
 Se även avsnittet Icke-mål i [AGENTS.md](../AGENTS.md).
 

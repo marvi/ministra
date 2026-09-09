@@ -1057,3 +1057,49 @@ Avvisat:
   situation som D-015 försökte disciplinera fram rättigheter i.
 - **Rootless podman** (D-034). vps-deploy:s rootful quadlets med `UserNS=auto` ger samma
   isolering utan linger-användare, och passar resten av servern.
+
+## D-046 — Ett förslag på schema, som hjälpmedel
+**2026-09-09 · Gäller**
+
+Skaparen får en knapp, **"Ge förslag på schema"**, när förfrågan har tre eller fler svar.
+Den leder till ett arbetsblad där appen har fördelat dem som svarat på dagarna, och där
+skaparen flyttar om, lägger till och tar bort tills schemat ser ut som hen vill. Resultatet
+tas ut med "Kopiera som text" eller utskrift. Planen finns i
+[plan-schemaforslag.md](plan-schemaforslag.md).
+
+Det är första gången appen gör något med svaren utöver att visa dem. product.md förutsåg
+det som en tänkbar vidareutveckling, och README och AGENTS sa att appen *inte* fördelar.
+Det ändras nu, med tre gränser som står kvar:
+
+- **Förslaget är ett hjälpmedel, avgörandet är skaparens.** Appen föreslår; människan
+  bestämmer. Förslaget visas aldrig för gruppen, bara under admin-token.
+- **Ingenting lagras.** Arbetsbladet lever i webbläsaren. Servern räknar fram förslaget
+  ur de svar som redan finns, renderar det och glömmer det. Ingen ny tabell, inget nytt
+  fält, ingen ny rad i [D-028](#d-028--personuppgifter-vi-lagrar). Laddas sidan om börjar
+  man om.
+- **Appen vet fortfarande inte hur många som behövs.** Skaparen anger personer per dag i
+  en väljare på arbetsbladet, och talet följer med som en parameter i adressen. Det är
+  inte det fält [D-005](#d-005--en-roll-inte-fem) förbjuder: det sparas inte, och det
+  ger ingen förloppsindikator eller varning på svarsvyn.
+
+Algoritmen är deterministisk och utan slump, så samma svar ger samma förslag. Reglerna,
+i prioritetsordning: aldrig "kan inte"; grönt före gult, alltid; rättvist antal; utspritt;
+knappa dagar först. Lika-fall avgörs av svarsordningen, aldrig av namn i bokstavsordning.
+En person läggs aldrig på en dag hen sagt nej till, varken av förslaget eller av
+skaparen: sådana dagar tar inte emot brickan.
+
+**"Kopiera som text" är inte den export
+[D-010](#d-010--svar-är-oföränderliga-och-alla-ser-alla) avvisar.** Den lägger schemat,
+inte svaren, på skaparens eget urklipp, byggt i webbläsaren ur det som står på skärmen.
+Det är skaparens arbete på väg ut ur appen, samma sak som att skriva av listan för hand.
+Svaren exporteras fortfarande inte, och gruppen får ingen ny vy.
+
+Avvisat:
+
+- **Att spara schemat**, dela det med gruppen eller mejla det. Det vore en ny
+  personuppgift och en ny vy, och skaparen tar ändå schemat vidare i sitt eget verktyg.
+- **PDF.** Utskriftsstilen räcker.
+- **Dubbelsvar som algoritmen städar.** "Anna" och "Anna Ny" är två deltagare (D-010).
+  Skaparen tar bort den ena från arbetsbladet med ett kryss, med ångra.
+- **En "nytt förslag"-knapp.** Förslaget är deterministiskt och skaparen flyttar själv.
+  Lätt att lägga till senare som en rotationsparameter i samma adress.

@@ -1,6 +1,6 @@
 # Plan: "Ge förslag på schema"
 
-Status: plan, inte påbörjad. Skriven 2026-09-09 efter samtal med skaparen, och avstämd
+Status: påbörjad 2026-09-09 på branchen feature/schemaforslag. Skriven 2026-09-09 efter samtal med skaparen, och avstämd
 samma dag. Alla frågor under "Avgjort" är beslutade.
 
 ## Vad som ska byggas

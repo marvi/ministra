@@ -332,8 +332,11 @@ oombett:
 - Internationalisering — svenska räcker
 - Återkommande förfrågningar, mallar, kopiering av gamla planer
 
+Förslaget på schema ([D-046](docs/decisions.md)) är ett hjälpmedel, inte ett beslut:
+appen föreslår, skaparen avgör, och ingenting lagras. Bygg inte ut det till något som
+sparar, delar eller mejlar ett schema, eller som visar det för gruppen.
+
 Uttalade v2-kandidater — bra idéer, men inte nu, och inte utan att det efterfrågas:
 
-- Hjälp åt skaparen att fördela personer på dagarna utifrån svaren. **V1 samlar bara in
-  tillgänglighet**; fördelningen gör en människa.
 - Layoutad PDF för utskrift av schema.
+- Att spara eller dela ett färdigt schema.
