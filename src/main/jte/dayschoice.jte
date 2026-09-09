@@ -31,7 +31,7 @@
                            checked="${kept == null || kept.contains(day.date())}">
                     <label for="pick-${day.date().toString()}">
                         <span class="pick-text">
-                            <span class="pick-date">${Dates.formatShort(day.date())}</span>
+                            <span class="pick-date">${Dates.formatWithWeekday(day.date())}</span>
                             @if(day.hasName())
                                 <span class="pick-name">${day.name()}</span>
                             @endif

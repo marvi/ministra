@@ -85,7 +85,7 @@ class PollServiceDetachedTest extends PostgresTest {
     }
 
     @Test
-    void tar_emot_svar_på_en_frånkopplad_förfrågan() {
+    void accepts_an_answer_on_a_detached_poll() {
         var poll = reloaded(create());
 
         var participant = polls.submit(poll, "Anna", allAnswered(poll, Availability.CAN));
@@ -94,7 +94,7 @@ class PollServiceDetachedTest extends PostgresTest {
     }
 
     @Test
-    void bygger_vyn_från_en_frånkopplad_förfrågan() {
+    void builds_the_view_from_a_detached_poll() {
         var created = create();
         polls.submit(created, "Anna", allAnswered(created, Availability.CAN));
 
@@ -105,7 +105,7 @@ class PollServiceDetachedTest extends PostgresTest {
     }
 
     @Test
-    void raderar_en_frånkopplad_förfrågan() {
+    void deletes_a_detached_poll() {
         var created = create();
         polls.submit(created, "Anna", allAnswered(created, Availability.CAN));
 
@@ -115,7 +115,7 @@ class PollServiceDetachedTest extends PostgresTest {
     }
 
     @Test
-    void namnkollision_upptäcks_över_transaktionsgränser() {
+    void name_collision_is_detected_across_transaction_boundaries() {
         var poll = reloaded(create());
         polls.submit(poll, "Anna", allAnswered(poll, Availability.CAN));
 

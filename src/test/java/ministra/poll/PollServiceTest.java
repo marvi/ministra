@@ -66,7 +66,7 @@ class PollServiceTest extends PostgresTest {
     // ---------- Skapa ----------
 
     @Test
-    void skapar_med_två_olika_token() {
+    void creates_with_two_different_tokens() {
         var poll = create();
 
         assertThat(poll.getResponseToken()).hasSize(22);
@@ -75,14 +75,14 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void giltig_till_räknas_från_idag() {
+    void valid_until_is_counted_from_today() {
         var poll = create();
 
         assertThat(poll.getValidUntil()).isEqualTo(TODAY.plusMonths(1));
     }
 
     @Test
-    void köar_skapelsemejlet_i_samma_transaktion() {
+    void queues_the_creation_email_in_the_same_transaction() {
         var poll = create();
 
         assertThat(outbox.findAll())
@@ -94,7 +94,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void vägrar_period_längre_än_ett_halvår() {
+    void rejects_a_period_longer_than_six_months() {
         var start = LocalDate.of(2026, 10, 4);
 
         assertThatThrownBy(() -> create(form(start, start.plusMonths(7))))
@@ -103,14 +103,14 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void tillåter_period_på_exakt_ett_halvår() {
+    void allows_a_period_of_exactly_six_months() {
         var start = LocalDate.of(2026, 10, 4);
 
         assertThat(create(form(start, start.plusMonths(6)))).isNotNull();
     }
 
     @Test
-    void vägrar_slut_före_start() {
+    void rejects_end_before_start() {
         assertThatThrownBy(() ->
                         create(form(LocalDate.of(2026, 11, 1), LocalDate.of(2026, 10, 4))))
                 .isInstanceOf(SubmissionException.class)
@@ -118,7 +118,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void vägrar_startdag_som_redan_varit() {
+    void rejects_a_start_day_in_the_past() {
         // Formuläret erbjuder bara framtida söndagar, men det går att posta förbi det.
         assertThatThrownBy(() ->
                         create(form(LocalDate.of(2026, 8, 2), LocalDate.of(2026, 9, 6))))
@@ -127,7 +127,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void vägrar_startdag_som_är_idag() {
+    void rejects_a_start_day_that_is_today() {
         var sunday = LocalDate.of(2026, 9, 13);
 
         assertThatThrownBy(() ->
@@ -140,7 +140,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void erbjuder_bara_dagar_i_framtiden() {
+    void offers_only_days_in_the_future() {
         var sunday = LocalDate.of(2026, 9, 13);
 
         var offered = polls.selectableDays(sunday);
@@ -152,7 +152,7 @@ class PollServiceTest extends PostgresTest {
     // ---------- Lägga till egna dagar (D-043) ----------
 
     @Test
-    void tar_med_ett_datum_som_kyrkoåret_inte_har() {
+    void includes_a_date_the_church_year_does_not_have() {
         // En församling kan fira ett lokalt helgon eller en egen högtid.
         var form = form(LocalDate.of(2026, 10, 4), LocalDate.of(2026, 11, 1));
         var kept = allDates(form);
@@ -165,7 +165,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void egna_dagar_hamnar_i_datumordning() {
+    void extra_days_land_in_date_order() {
         var form = form(LocalDate.of(2026, 10, 4), LocalDate.of(2026, 11, 1));
         var kept = allDates(form);
         kept.add(LocalDate.of(2026, 10, 14));
@@ -176,7 +176,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void en_egen_dag_utan_kyrkoårsnamn_har_inget_namn() {
+    void an_extra_day_without_a_church_year_name_has_no_name() {
         var form = form(LocalDate.of(2026, 10, 4), LocalDate.of(2026, 11, 1));
         var kept = allDates(form);
         kept.add(LocalDate.of(2026, 10, 14));
@@ -189,7 +189,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void datum_utanför_perioden_sparas_inte() {
+    void dates_outside_the_period_are_not_saved() {
         var form = form(LocalDate.of(2026, 10, 4), LocalDate.of(2026, 11, 1));
         var kept = allDates(form);
         kept.add(LocalDate.of(2027, 3, 2));
@@ -201,7 +201,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void en_egen_dag_måste_besvaras_som_alla_andra() {
+    void an_extra_day_must_be_answered_like_any_other() {
         var form = form(LocalDate.of(2026, 10, 4), LocalDate.of(2026, 11, 1));
         var kept = allDates(form);
         kept.add(LocalDate.of(2026, 10, 14));
@@ -215,7 +215,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void en_förfrågan_kan_bestå_av_enbart_egna_dagar() {
+    void a_poll_may_consist_of_extra_days_only() {
         var form = form(LocalDate.of(2026, 10, 4), LocalDate.of(2026, 11, 1));
 
         var poll = polls.create(form, TODAY, Set.of(LocalDate.of(2026, 10, 14)));
@@ -227,7 +227,7 @@ class PollServiceTest extends PostgresTest {
     // ---------- Svara ----------
 
     @Test
-    void sparar_ett_svar_per_dag() {
+    void saves_one_answer_per_day() {
         var poll = create();
         var days = polls.daysOf(poll);
 
@@ -237,7 +237,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void trimmar_namnet() {
+    void trims_the_name() {
         var poll = create();
 
         var participant = polls.submit(poll, "  Anna  ", allAnswered(poll, Availability.CAN));
@@ -248,7 +248,7 @@ class PollServiceTest extends PostgresTest {
     // ---------- Välja bort dagar vid skapandet (D-042) ----------
 
     @Test
-    void tar_bara_med_de_valda_dagarna() {
+    void includes_only_the_chosen_days() {
         var form = form(LocalDate.of(2026, 10, 4), LocalDate.of(2026, 11, 1));
         var all = polls.daysBetween(form);
         var dropped = all.getFirst().date();
@@ -262,7 +262,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void bortvalda_dagar_ingår_inte_i_ett_svar() {
+    void excluded_days_are_not_part_of_an_answer() {
         var form = form(LocalDate.of(2026, 10, 4), LocalDate.of(2026, 11, 1));
         var dropped = polls.daysBetween(form).getFirst().date();
         var kept = allDates(form);
@@ -277,7 +277,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void vyn_visar_inte_bortvalda_dagar() {
+    void the_view_does_not_show_excluded_days() {
         var form = form(LocalDate.of(2026, 10, 4), LocalDate.of(2026, 11, 1));
         var dropped = polls.daysBetween(form).getFirst().date();
         var kept = allDates(form);
@@ -290,7 +290,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void minst_en_dag_måste_vara_med() {
+    void at_least_one_day_must_be_included() {
         var form = form(LocalDate.of(2026, 10, 4), LocalDate.of(2026, 11, 1));
 
         assertThatThrownBy(() -> polls.create(form, TODAY, Set.of()))
@@ -299,7 +299,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void dagar_utanför_perioden_gör_ingen_skillnad() {
+    void days_outside_the_period_make_no_difference() {
         var form = form(LocalDate.of(2026, 10, 4), LocalDate.of(2026, 11, 1));
         var kept = allDates(form);
         kept.add(LocalDate.of(2030, 1, 6));
@@ -312,7 +312,7 @@ class PollServiceTest extends PostgresTest {
     // ---------- Lägga till egna dagar (D-043) ----------
 
     @Test
-    void kräver_att_alla_dagar_besvaras() {
+    void requires_every_day_to_be_answered() {
         var poll = create();
         var answers = allAnswered(poll, Availability.CAN);
         answers.remove(polls.daysOf(poll).getFirst().date());
@@ -323,7 +323,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void kräver_ett_namn() {
+    void requires_a_name() {
         var poll = create();
 
         assertThatThrownBy(() -> polls.submit(poll, "   ", allAnswered(poll, Availability.CAN)))
@@ -332,7 +332,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void vägrar_samma_namn_två_gånger_oavsett_skiftläge_och_blanksteg() {
+    void rejects_the_same_name_twice_regardless_of_case_and_whitespace() {
         var poll = create();
         polls.submit(poll, "Anna", allAnswered(poll, Availability.CAN));
 
@@ -343,7 +343,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void föreslår_ett_särskiljande_namn_vid_krock() {
+    void suggests_a_distinguishing_name_on_collision() {
         var poll = create();
         polls.submit(poll, "Anna", allAnswered(poll, Availability.CAN));
 
@@ -352,7 +352,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void samma_namn_går_bra_i_olika_förfrågningar() {
+    void the_same_name_is_fine_in_different_polls() {
         var first = create();
         var second = create();
 
@@ -362,7 +362,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void struntar_i_datum_utanför_perioden() {
+    void ignores_dates_outside_the_period() {
         var poll = create();
         var answers = allAnswered(poll, Availability.CAN);
         answers.put(LocalDate.of(2030, 1, 6), Availability.CANNOT);
@@ -377,7 +377,7 @@ class PollServiceTest extends PostgresTest {
     // ---------- Vyn ----------
 
     @Test
-    void grupperar_namnen_per_svar() {
+    void groups_names_by_answer() {
         var poll = create();
         polls.submit(poll, "Anna", allAnswered(poll, Availability.CAN));
         polls.submit(poll, "Bengt", allAnswered(poll, Availability.IF_NEEDED));
@@ -394,7 +394,7 @@ class PollServiceTest extends PostgresTest {
     }
 
     @Test
-    void visar_alla_dagar_även_utan_svar() {
+    void shows_every_day_even_without_answers() {
         var poll = create();
 
         var view = polls.view(poll);
@@ -406,7 +406,7 @@ class PollServiceTest extends PostgresTest {
     // ---------- Radera ----------
 
     @Test
-    void radering_tar_med_deltagare_och_svar() {
+    void deletion_takes_participants_and_answers_with_it() {
         var poll = create();
         polls.submit(poll, "Anna", allAnswered(poll, Availability.CAN));
 

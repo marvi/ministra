@@ -1,7 +1,7 @@
 package ministra;
 
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
  * Riktig Postgres, inte H2 — annars fångas inte skillnader i datumhantering och
@@ -17,7 +17,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 public abstract class PostgresTest {
 
     @ServiceConnection
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16");
+    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16");
 
     static {
         POSTGRES.start();

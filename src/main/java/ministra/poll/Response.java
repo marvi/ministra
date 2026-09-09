@@ -13,6 +13,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.time.LocalDate;
+import org.jspecify.annotations.Nullable;
 
 /**
  * En deltagares svar för en enskild gudstjänstdag.
@@ -29,7 +30,7 @@ public class Response {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private @Nullable Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "participant_id", nullable = false, updatable = false)
@@ -43,7 +44,7 @@ public class Response {
     private Availability availability;
 
     @Column(name = "notified_at")
-    private Instant notifiedAt;
+    private @Nullable Instant notifiedAt;
 
     protected Response() {
         // för JPA
@@ -59,7 +60,7 @@ public class Response {
         this.notifiedAt = when;
     }
 
-    public Long getId() {
+    public @Nullable Long getId() {
         return id;
     }
 
@@ -73,9 +74,5 @@ public class Response {
 
     public Availability getAvailability() {
         return availability;
-    }
-
-    public Instant getNotifiedAt() {
-        return notifiedAt;
     }
 }

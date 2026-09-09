@@ -16,7 +16,7 @@ class RateLimiterTest {
     }
 
     @Test
-    void släpper_igenom_upp_till_taket() {
+    void lets_through_up_to_the_limit() {
         var limiter = limiterAllowing(3);
 
         assertThat(limiter.tryAcquire("1.2.3.4", NOW)).isTrue();
@@ -26,7 +26,7 @@ class RateLimiterTest {
     }
 
     @Test
-    void räknar_per_adress() {
+    void counts_per_address() {
         var limiter = limiterAllowing(1);
 
         assertThat(limiter.tryAcquire("1.2.3.4", NOW)).isTrue();
@@ -35,7 +35,7 @@ class RateLimiterTest {
     }
 
     @Test
-    void fönstret_glider_framåt() {
+    void the_window_slides_forward() {
         var limiter = limiterAllowing(1);
 
         assertThat(limiter.tryAcquire("1.2.3.4", NOW)).isTrue();
@@ -44,7 +44,7 @@ class RateLimiterTest {
     }
 
     @Test
-    void städar_bort_utgångna_fönster() {
+    void evicts_expired_windows() {
         var limiter = limiterAllowing(1);
         limiter.tryAcquire("1.2.3.4", NOW);
 

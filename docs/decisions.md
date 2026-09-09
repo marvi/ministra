@@ -65,11 +65,31 @@ aldrig en förutsättning.
 Biblioteket serveras från appen som `/js/htmx-2.0.4.min.js`. Inga externa resurser laddas
 vid körning, och filnamnet bär versionen så att en uppgradering blir en synlig ändring.
 
-## D-004 — Kod på engelska, gränssnitt på svenska
-**2026-09-09 · Gäller**
+## D-004 — Identifierare på engelska, kommentarer och gränssnitt på svenska
+**2026-09-09 · Gäller. Preciserat samma dag.**
 
 Se avsnittet Språk i [AGENTS.md](../AGENTS.md). Motivet är att koden ska följa
 Java-konventioner medan användarna är svensktalande församlingsmedlemmar.
+
+> **Preciserat 2026-09-09.** Beslutet sa ursprungligen "kod på engelska" och räknade upp
+> kommentarer och testnamn. Koden som skrevs följde det inte: javadoc och kommentarer blev
+> svenska, och 78 av 98 testmetoder fick svenska namn med å, ä och ö. Inkonsekvensen
+> löstes åt två håll.
+>
+> **Kommentarer och javadoc är svenska.** Det är dokumentation, och all annan
+> dokumentation — beslutsloggen, produkttexten, AGENTS.md — är svensk. Domänord som
+> "förbedjare" och "kyrkoåret" och hänvisningar som "D-013" ska inte behöva översättas
+> mitt i koden. Regeln ändrades.
+>
+> **Testnamn är engelska.** De är identifierare: de skrivs på kommandorad
+> (`-Dtest=Klass#metod`), hamnar i CI-rapporter och lever i klassfiler. Java tillåter
+> å, ä och ö där, och bygget är UTF-8 — men ett tyst beroende på att varje verktyg som
+> någonsin rör koden talar UTF-8 är inget att bära när alternativet är gratis. Koden
+> ändrades: alla 98 döptes om. Svenska utan prickar — `inte_ar_sondagar` — övervägdes
+> och avvisades som det sämsta av båda.
+>
+> Gränsen är alltså: **det kompilatorn ser är engelskt och ASCII; det människor läser
+> är svenskt.** Samma princip som [D-038](#d-038--svenska-i-ci-filerna) för CI-filerna.
 
 ## D-005 — En roll, inte fem
 **2026-09-09 · Gäller**
@@ -932,3 +952,39 @@ renderas om; funktionen är densamma, man hamnar bara överst
 
 En dag utan namn visar bara sitt datum. Kortet blir kortare, och det är rätt — det finns
 inget mer att säga om den.
+
+## D-044 — Svarsvyns utformning
+**2026-09-09 · Gäller**
+
+Efter en mockup av svarsvyn på mobil. Det mesta i den är antaget; två saker är avvisade.
+
+**Antaget:**
+
+- **Platt lista med hårlinjer**, inte inramade kort. Trettio kort på en mobil blir tungt;
+  avdelare läser som en tidning och sparar höjd.
+- **Veckodag och fullt datum som rubrikrad**, kyrkoårsnamnet som den feta raden. Dagarna
+  heter "Tacksägelsedagen" i församlingens mun, och folk planerar i veckodagar. En dag
+  utan kyrkoårsnamn ([D-043](#d-043--skaparen-får-lägga-till-egna-datum)) bär sig själv
+  på datumraden utan att se trasig ut.
+- **Trafikljusknapparna är tonade redan i vila** — ljus grön, gul, röd — och blir mörka
+  med vit text och en bock när de väljs. Instruktionstexten i
+  [D-013](#d-013--de-tre-valen-förklaras-med-synlig-text) säger "kan (grön)"; med
+  neutrala knappar syftar ordet på ingenting förrän man klickat. Ljus mot mörk är
+  dessutom en kontrastskillnad och inte bara en nyansskillnad, så valet syns för den som
+  inte skiljer på färgerna. Bocken gör det otvetydigt i ögonvrån.
+- **"Raderas efter …" syns för alla**, inte bara skaparen, och **"Svar kan inte ändras i
+  efterhand"** står precis ovanför knappen ([D-010](#d-010--svar-är-oföränderliga-och-alla-ser-alla)).
+- Knappen heter **"Spara mitt svar"** — samma verb som i dagvalet.
+
+**Avvisat:**
+
+- **Grönt som märkesfärg.** Mockupens spara-knapp var mörkgrön — samma gröna som en vald
+  "Kan". Trafikljuset äger grönt, gult och rött; ingenting annat på sidan får tala det
+  språket. Accenten är indigo och ska förbli något utanför de tre.
+- **Andras svar per person** ("Anna ● Kan"). Vackert med en deltagare; med tio
+  textläsare och trettio dagar blir det trehundra rader. Svaren grupperas per färg —
+  högst tre rader per dag — men med mockupens stil: färgad punkt och ordet utskrivet.
+
+**Fonter** är oförändrade: Georgia i rubrikerna, systemets sans i brödtexten, noll byte
+att ladda. Vill vi ha ett eget ansikte är Source Serif 4 (SIL OFL) för rubrikerna det
+val som stämmer med självhostningskravet; brödtexten stannar i systemets sans.

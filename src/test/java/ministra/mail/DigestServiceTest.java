@@ -73,7 +73,7 @@ class DigestServiceTest extends PostgresTest {
     }
 
     @Test
-    void skickar_inget_när_inget_nytt_kommit_in() {
+    void sends_nothing_when_nothing_new_has_arrived() {
         createPoll("Sakristaner", "markus@example.se");
 
         assertThat(digests.queueDigests(NOW)).isZero();
@@ -81,7 +81,7 @@ class DigestServiceTest extends PostgresTest {
     }
 
     @Test
-    void ett_mejl_per_skapare_oavsett_antal_svar() {
+    void one_email_per_creator_regardless_of_answer_count() {
         var poll = createPoll("Sakristaner", "markus@example.se");
         answer(poll, "Anna");
         answer(poll, "Bengt");
@@ -99,7 +99,7 @@ class DigestServiceTest extends PostgresTest {
     }
 
     @Test
-    void flera_förfrågningar_för_samma_skapare_blir_ett_mejl() {
+    void several_polls_for_the_same_creator_become_one_email() {
         var first = createPoll("Sakristaner", "markus@example.se");
         var second = createPoll("Textläsare", "markus@example.se");
         answer(first, "Anna");
@@ -118,7 +118,7 @@ class DigestServiceTest extends PostgresTest {
     }
 
     @Test
-    void olika_skapare_får_var_sitt_mejl() {
+    void different_creators_each_get_their_own_email() {
         var first = createPoll("Sakristaner", "markus@example.se");
         var second = createPoll("Textläsare", "hustrun@example.se");
         answer(first, "Anna");
@@ -129,7 +129,7 @@ class DigestServiceTest extends PostgresTest {
     }
 
     @Test
-    void samma_svar_rapporteras_aldrig_två_gånger() {
+    void the_same_answer_is_never_reported_twice() {
         // Idempotensen är hela skälet till att outboxen finns (D-030).
         var poll = createPoll("Sakristaner", "markus@example.se");
         answer(poll, "Anna");
@@ -141,7 +141,7 @@ class DigestServiceTest extends PostgresTest {
     }
 
     @Test
-    void markerar_svaren_i_samma_transaktion_som_outboxraden() {
+    void marks_answers_in_the_same_transaction_as_the_outbox_row() {
         var poll = createPoll("Sakristaner", "markus@example.se");
         answer(poll, "Anna");
         assertThat(responses.findUnnotified()).isNotEmpty();
@@ -152,7 +152,7 @@ class DigestServiceTest extends PostgresTest {
     }
 
     @Test
-    void nya_svar_efter_en_sammanfattning_ger_en_ny() {
+    void new_answers_after_a_digest_produce_a_new_one() {
         var poll = createPoll("Sakristaner", "markus@example.se");
         answer(poll, "Anna");
         digests.queueDigests(NOW);

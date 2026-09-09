@@ -13,7 +13,7 @@ class ChurchCalendarTest {
     private final ChurchCalendar calendar = new ChurchCalendar();
 
     @Test
-    void tar_med_helgdagar_som_inte_är_söndagar() {
+    void includes_holy_days_that_are_not_sundays() {
         // Kyrkan firar gudstjänst även juldagen och annandagarna (D-040).
         var days = calendar.serviceDaysBetween(LocalDate.of(2026, 12, 20), LocalDate.of(2026, 12, 31));
 
@@ -22,7 +22,7 @@ class ChurchCalendarTest {
     }
 
     @Test
-    void tar_med_annandag_pingst_och_långfredagen() {
+    void includes_whit_monday_and_good_friday() {
         var days = calendar.serviceDaysBetween(LocalDate.of(2027, 1, 1), LocalDate.of(2027, 12, 31));
 
         assertThat(days).extracting(ServiceDay::name)
@@ -31,7 +31,7 @@ class ChurchCalendarTest {
     }
 
     @Test
-    void utelämnar_vardagar_utan_egen_gudstjänst() {
+    void omits_weekdays_without_a_service_of_their_own() {
         // Måndag till onsdag i Stilla veckan är OrdinaryDay i API:t och ska inte med.
         var days = calendar.serviceDaysBetween(LocalDate.of(2027, 3, 20), LocalDate.of(2027, 3, 26));
 
@@ -41,7 +41,7 @@ class ChurchCalendarTest {
     }
 
     @Test
-    void hämtar_kyrkoårets_namn_från_apiet() {
+    void takes_the_church_year_name_from_the_api() {
         var days = calendar.serviceDaysBetween(LocalDate.of(2026, 11, 29), LocalDate.of(2026, 11, 29));
 
         assertThat(days).singleElement().satisfies(day ->
@@ -49,7 +49,7 @@ class ChurchCalendarTest {
     }
 
     @Test
-    void täcker_varje_söndag_även_över_ett_årsskifte() {
+    void covers_every_sunday_even_across_a_year_boundary() {
         var from = LocalDate.of(2026, 12, 1);
         var to = LocalDate.of(2027, 2, 1);
 
@@ -62,14 +62,14 @@ class ChurchCalendarTest {
     }
 
     @Test
-    void är_i_datumordning() {
+    void is_in_date_order() {
         var days = calendar.serviceDaysBetween(LocalDate.of(2026, 1, 1), LocalDate.of(2027, 6, 30));
 
         assertThat(days).extracting(ServiceDay::date).isSorted();
     }
 
     @Test
-    void namnger_ett_godtyckligt_datum_bara_när_apiet_verkligen_känner_det() {
+    void names_an_arbitrary_date_only_when_the_api_really_knows_it() {
         // getCurrentDay ger närmast FÖREGÅENDE liturgiska dag. Utan datumjämförelsen
         // skulle en vanlig tisdag få söndagens namn.
         assertThat(calendar.dayAt(LocalDate.of(2027, 2, 16)).hasName()).isFalse();
@@ -77,7 +77,7 @@ class ChurchCalendarTest {
     }
 
     @Test
-    void använder_kyrkoårets_namn_när_datumet_stämmer() {
+    void uses_the_church_year_name_when_the_date_matches() {
         // Lär sig lektionarium namnge fler vardagar dyker de upp här av sig själva.
         var day = calendar.dayAt(LocalDate.of(2027, 3, 23));
 
@@ -85,13 +85,13 @@ class ChurchCalendarTest {
     }
 
     @Test
-    void tomt_intervall_när_slutet_ligger_före_starten() {
+    void empty_range_when_end_is_before_start() {
         assertThat(calendar.serviceDaysBetween(LocalDate.of(2026, 5, 1), LocalDate.of(2026, 4, 1)))
                 .isEmpty();
     }
 
     @Test
-    void vägrar_år_som_apiet_inte_stödjer() {
+    void rejects_years_the_api_does_not_support() {
         assertThatThrownBy(() ->
                         calendar.serviceDaysBetween(LocalDate.of(2003, 1, 1), LocalDate.of(2003, 3, 1)))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -99,7 +99,7 @@ class ChurchCalendarTest {
     }
 
     @Test
-    void hämtar_kyrkoårets_namn_även_för_helgdagar() {
+    void takes_the_church_year_name_for_holy_days_too() {
         var days = calendar.serviceDaysBetween(LocalDate.of(2027, 5, 17), LocalDate.of(2027, 5, 17));
 
         assertThat(days).singleElement().satisfies(day ->

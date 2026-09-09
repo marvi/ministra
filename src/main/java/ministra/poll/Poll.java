@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 /**
  * En insamling av tillgänglighet för en period av gudstjänstdagar.
@@ -37,7 +38,7 @@ public class Poll {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private @Nullable Long id;
 
     /** Delas ut till dem som ska svara. */
     @Column(name = "response_token", nullable = false, unique = true, updatable = false)
@@ -51,7 +52,7 @@ public class Poll {
     private String title;
 
     @Column(name = "comment_text")
-    private String comment;
+    private @Nullable String comment;
 
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
@@ -95,6 +96,9 @@ public class Poll {
      * Finns för att raderingen ska kaskadera i JPA och inte bara i databasen. Utan den
      * går flush på en raderad förfrågan i väggen, eftersom deltagarna fortfarande pekar
      * på den i persistenskontexten.
+     *
+     * <p>Läses aldrig från Java — Hibernate äger samlingen, och {@link #addParticipant}
+     * fyller den. Därför finns ingen getter.
      */
     @OneToMany(
             mappedBy = "poll",
@@ -111,7 +115,7 @@ public class Poll {
             String responseToken,
             String adminToken,
             String title,
-            String comment,
+            @Nullable String comment,
             LocalDate startDate,
             LocalDate endDate,
             LocalDate validUntil,
@@ -129,7 +133,7 @@ public class Poll {
         this.createdAt = Instant.now();
     }
 
-    public Long getId() {
+    public @Nullable Long getId() {
         return id;
     }
 
@@ -145,7 +149,7 @@ public class Poll {
         return title;
     }
 
-    public String getComment() {
+    public @Nullable String getComment() {
         return comment;
     }
 
@@ -171,18 +175,6 @@ public class Poll {
 
     public String getCreatorEmail() {
         return creatorEmail;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public List<Participant> getParticipants() {
-        return participants;
-    }
-
-    public Set<LocalDate> getExcludedDays() {
-        return Collections.unmodifiableSet(excludedDays);
     }
 
     public Set<LocalDate> getExtraDays() {

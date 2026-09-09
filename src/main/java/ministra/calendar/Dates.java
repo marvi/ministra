@@ -17,8 +17,8 @@ public final class Dates {
 
     private static final DateTimeFormatter LONG_FORM =
             DateTimeFormatter.ofPattern("d MMMM yyyy", SWEDISH);
-    private static final DateTimeFormatter SHORT_FORM =
-            DateTimeFormatter.ofPattern("d MMM", SWEDISH);
+    private static final DateTimeFormatter WITH_WEEKDAY =
+            DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", SWEDISH);
 
     private Dates() {}
 
@@ -27,8 +27,11 @@ public final class Dates {
         return LONG_FORM.format(date);
     }
 
-    /** "9 okt." — för listan, där årtalet framgår av sammanhanget. */
-    public static String formatShort(LocalDate date) {
-        return SHORT_FORM.format(date);
+    /**
+     * "fredag 9 oktober 2026" — för daglistorna. Folk planerar i veckodagar, och en dag
+     * utan kyrkoårsnamn bär sig själv med veckodag och fullt datum (D-044).
+     */
+    public static String formatWithWeekday(LocalDate date) {
+        return WITH_WEEKDAY.format(date);
     }
 }

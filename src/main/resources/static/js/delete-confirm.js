@@ -6,9 +6,9 @@
  * knappen fungerar ändå.
  */
 document.addEventListener('DOMContentLoaded', function () {
-    var start = document.getElementById('delete-start');
-    var cancel = document.getElementById('delete-cancel');
-    var confirm = document.getElementById('delete-confirm');
+    const start = document.getElementById('delete-start');
+    const cancel = document.getElementById('delete-cancel');
+    const confirm = document.getElementById('delete-confirm');
     if (!start || !confirm) {
         return;
     }

@@ -19,6 +19,7 @@ import ministra.poll.Poll;
 import ministra.poll.PollNotFoundException;
 import ministra.poll.PollService;
 import ministra.poll.SubmissionException;
+import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -97,9 +98,9 @@ public class PollController {
     public String addDayFragment(
             @Valid CreatePollForm form,
             BindingResult binding,
-            @RequestParam(name = "day", required = false) List<String> keptDays,
-            @RequestParam(name = "added", required = false) List<String> addedDays,
-            @RequestParam(name = "extraDate", required = false) String extraDate,
+            @RequestParam(name = "day", required = false) @Nullable List<String> keptDays,
+            @RequestParam(name = "added", required = false) @Nullable List<String> addedDays,
+            @RequestParam(name = "extraDate", required = false) @Nullable String extraDate,
             Model model) {
         var view = addDay(form, binding, keptDays, addedDays, extraDate, model);
         // Bara dagvalet finns som fragment. Hamnar vi på skapa-formuläret — vilket kräver
@@ -111,9 +112,9 @@ public class PollController {
     public String addDay(
             @Valid CreatePollForm form,
             BindingResult binding,
-            @RequestParam(name = "day", required = false) List<String> keptDays,
-            @RequestParam(name = "added", required = false) List<String> addedDays,
-            @RequestParam(name = "extraDate", required = false) String extraDate,
+            @RequestParam(name = "day", required = false) @Nullable List<String> keptDays,
+            @RequestParam(name = "added", required = false) @Nullable List<String> addedDays,
+            @RequestParam(name = "extraDate", required = false) @Nullable String extraDate,
             Model model) {
 
         var errors = fieldErrors(binding);
@@ -141,8 +142,8 @@ public class PollController {
     public String save(
             @Valid CreatePollForm form,
             BindingResult binding,
-            @RequestParam(name = "day", required = false) List<String> keptDays,
-            @RequestParam(name = "added", required = false) List<String> addedDays,
+            @RequestParam(name = "day", required = false) @Nullable List<String> keptDays,
+            @RequestParam(name = "added", required = false) @Nullable List<String> addedDays,
             HttpServletRequest request,
             Model model) {
 
@@ -185,8 +186,8 @@ public class PollController {
             Model model,
             CreatePollForm form,
             Set<LocalDate> added,
-            Set<LocalDate> kept,
-            String error) {
+            @Nullable Set<LocalDate> kept,
+            @Nullable String error) {
         model.addAttribute("form", form);
         model.addAttribute("days", polls.candidateDays(form, added));
         model.addAttribute("added", added);
@@ -202,7 +203,7 @@ public class PollController {
         return errors;
     }
 
-    private static LocalDate parseDate(String raw) {
+    private static @Nullable LocalDate parseDate(String raw) {
         try {
             return LocalDate.parse(raw);
         } catch (RuntimeException e) {
@@ -211,7 +212,7 @@ public class PollController {
     }
 
     /** Skräp i formuläret räknas som en dag som inte är med. */
-    private static Set<LocalDate> parseDates(List<String> raw) {
+    private static Set<LocalDate> parseDates(@Nullable List<String> raw) {
         var dates = new LinkedHashSet<LocalDate>();
         for (var value : raw == null ? List.<String>of() : raw) {
             var date = parseDate(value);

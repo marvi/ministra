@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Duration;
 import java.time.Instant;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Ett mejl på väg ut.
@@ -28,7 +29,7 @@ public class OutboxEmail {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private @Nullable Long id;
 
     @Column(nullable = false, updatable = false)
     private String recipient;
@@ -49,7 +50,7 @@ public class OutboxEmail {
     private int attempts;
 
     @Column(name = "last_error", length = 500)
-    private String lastError;
+    private @Nullable String lastError;
 
     protected OutboxEmail() {
         // för JPA
@@ -68,7 +69,7 @@ public class OutboxEmail {
      * Räknar upp försöket och skjuter nästa framåt med exponentiell backoff, en minut
      * fördubblad per försök upp till en timme.
      */
-    public void recordFailure(String error, Instant now) {
+    public void recordFailure(@Nullable String error, Instant now) {
         attempts++;
         lastError = error == null ? null : error.substring(0, Math.min(error.length(), 500));
         var backoff = Duration.ofMinutes(1L << Math.min(attempts - 1, 6));
@@ -80,7 +81,7 @@ public class OutboxEmail {
         return attempts >= MAX_ATTEMPTS;
     }
 
-    public Long getId() {
+    public @Nullable Long getId() {
         return id;
     }
 
@@ -96,10 +97,6 @@ public class OutboxEmail {
         return body;
     }
 
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
     public Instant getNextAttemptAt() {
         return nextAttemptAt;
     }
@@ -108,7 +105,7 @@ public class OutboxEmail {
         return attempts;
     }
 
-    public String getLastError() {
+    public @Nullable String getLastError() {
         return lastError;
     }
 }

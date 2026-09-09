@@ -1,3 +1,4 @@
+@import ministra.poll.Availability
 @import ministra.poll.PollView
 @import ministra.poll.ServiceDayView
 @import ministra.calendar.Dates
@@ -13,6 +14,11 @@
 
 @template.layout(title = view.poll().getTitle(), content = @`
     <h1>${view.poll().getTitle()}</h1>
+
+    @if(view.poll().hasComment())
+        <p class="lede">${view.poll().getComment()}</p>
+    @endif
+
     <p class="meta">
         ${Dates.format(view.poll().getStartDate())} – ${Dates.format(view.poll().getEndDate())}
         · ${view.days().size()} dagar
@@ -22,10 +28,8 @@
             · ${view.participantCount()} svar
         @endif
     </p>
-
-    @if(view.poll().hasComment())
-        <p class="comment">${view.poll().getComment()}</p>
-    @endif
+    <%-- Synligt för alla, inte bara skaparen. Ärligt om vad som händer med svaren. --%>
+    <p class="meta">Raderas efter ${Dates.format(view.poll().getValidUntil())}.</p>
 
     @if(error != null)
         <p class="error">${error}</p>
@@ -48,11 +52,6 @@
         </div>
     @endif
 
-    <%-- Ordalydelsen är beslutad i D-013 och står alltid framme, aldrig i en hover. --%>
-    <p class="instructions">Ange för varje dag om du <strong>kan</strong> (grön),
-        <strong>kan om det behövs</strong> (gul) eller <strong>inte kan</strong> (röd).
-        Mittenvalet betyder att du helst avstår, men ställer upp om ingen annan kan.</p>
-
     <form method="post" action="${submitPath}">
         <div class="field">
             <label class="field-label" for="name">Ditt förnamn
@@ -62,11 +61,18 @@
                    autocomplete="given-name" value="${prefilledName}">
         </div>
 
+        <%-- Ordalydelsen är beslutad i D-013 och står alltid framme, aldrig i en hover.
+             Knapparna nedanför är tonade redan i vila, så "grön", "gul" och "röd" pekar
+             på något man ser (D-044). --%>
+        <p class="instructions">Ange för varje dag om du <strong>kan</strong> (grön),
+            <strong>kan om det behövs</strong> (gul) eller <strong>inte kan</strong> (röd).
+            Mittenvalet betyder att du helst avstår, men ställer upp om ingen annan kan.</p>
+
         <fieldset class="days">
             @for(ServiceDayView row : view.days())
                 <fieldset class="day">
                     <legend>
-                        <span class="day-date">${Dates.formatShort(row.day().date())}</span>
+                        <span class="day-date">${Dates.formatWithWeekday(row.day().date())}</span>
                         @if(row.day().hasName())
                             <span class="day-name">${row.day().name()}</span>
                         @endif
@@ -77,37 +83,39 @@
                                id="${row.day().date().toString()}-can"
                                name="d-${row.day().date().toString()}" value="CAN">
                         <label class="can" for="${row.day().date().toString()}-can">
-                            <span class="mark" aria-hidden="true">●</span> Kan
+                            <span class="check" aria-hidden="true">✓</span> ${Availability.CAN.label()}
                         </label>
 
                         <input type="radio" required
                                id="${row.day().date().toString()}-maybe"
                                name="d-${row.day().date().toString()}" value="IF_NEEDED">
                         <label class="maybe" for="${row.day().date().toString()}-maybe">
-                            <span class="mark" aria-hidden="true">◐</span> Om det behövs
+                            <span class="check" aria-hidden="true">✓</span> ${Availability.IF_NEEDED.label()}
                         </label>
 
                         <input type="radio" required
                                id="${row.day().date().toString()}-cannot"
                                name="d-${row.day().date().toString()}" value="CANNOT">
                         <label class="cannot" for="${row.day().date().toString()}-cannot">
-                            <span class="mark" aria-hidden="true">○</span> Kan inte
+                            <span class="check" aria-hidden="true">✓</span> ${Availability.CANNOT.label()}
                         </label>
                     </div>
 
+                    <%-- Grupperat per svar, inte per person — det skalar till tio
+                         textläsare. Ordet står utskrivet så färgen aldrig bär ensam. --%>
                     @if(row.hasAnswers())
                         <div class="answers">
                             @if(!row.can().isEmpty())
                                 <p class="can"><span class="mark" aria-hidden="true">●</span>
-                                    <span><span class="sr-only">Kan: </span>${String.join(", ", row.can())}</span></p>
+                                    <span class="word">${Availability.CAN.label()}</span>${String.join(", ", row.can())}</p>
                             @endif
                             @if(!row.ifNeeded().isEmpty())
-                                <p class="maybe"><span class="mark" aria-hidden="true">◐</span>
-                                    <span><span class="sr-only">Om det behövs: </span>${String.join(", ", row.ifNeeded())}</span></p>
+                                <p class="maybe"><span class="mark" aria-hidden="true">●</span>
+                                    <span class="word">${Availability.IF_NEEDED.label()}</span>${String.join(", ", row.ifNeeded())}</p>
                             @endif
                             @if(!row.cannot().isEmpty())
-                                <p class="cannot"><span class="mark" aria-hidden="true">○</span>
-                                    <span><span class="sr-only">Kan inte: </span>${String.join(", ", row.cannot())}</span></p>
+                                <p class="cannot"><span class="mark" aria-hidden="true">●</span>
+                                    <span class="word">${Availability.CANNOT.label()}</span>${String.join(", ", row.cannot())}</p>
                             @endif
                         </div>
                     @endif
@@ -115,14 +123,16 @@
             @endfor
         </fieldset>
 
-        <div class="actions">
-            <button type="submit">Skicka mitt svar</button>
+        <%-- Rätt varning i rätt ögonblick (D-010). --%>
+        <p class="meta" style="margin-top:1.2rem">Svar kan inte ändras i efterhand.</p>
+        <div class="actions primary">
+            <button type="submit">Spara mitt svar</button>
         </div>
     </form>
 
     @if(admin)
         <h2>Radera förfrågan</h2>
-        <p class="meta">Förfrågan raderas automatiskt efter
+        <p class="meta">Raderas automatiskt efter
             ${Dates.format(view.poll().getValidUntil())}. Du kan också göra det nu.</p>
         <div class="actions">
             <button type="button" class="button danger" id="delete-start">Radera förfrågan</button>

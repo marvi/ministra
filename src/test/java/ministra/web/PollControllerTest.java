@@ -91,21 +91,21 @@ class PollControllerTest {
     }
 
     @Test
-    void skapaformuläret_visas() throws Exception {
+    void create_form_is_shown() throws Exception {
         mvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Ny förfrågan")));
     }
 
     @Test
-    void alla_svar_bär_noindex() throws Exception {
+    void every_response_carries_noindex() throws Exception {
         // Församlingens listor ska inte gå att googla.
         mvc.perform(get("/"))
                 .andExpect(header().string("X-Robots-Tag", "noindex, nofollow, noarchive"));
     }
 
     @Test
-    void okänt_token_ger_samma_svar_som_ett_raderat() throws Exception {
+    void unknown_token_gets_the_same_response_as_a_deleted_one() throws Exception {
         // Ingen uppräkning: inget avslöjar om en förfrågan finns eller har funnits.
         given(polls.byResponseToken(anyString())).willThrow(new PollNotFoundException());
 
@@ -115,7 +115,7 @@ class PollControllerTest {
     }
 
     @Test
-    void svarsvyn_visar_den_beslutade_instruktionstexten() throws Exception {
+    void response_view_shows_the_decided_instruction_text() throws Exception {
         var subject = poll();
         given(polls.byResponseToken("SVARSTOKEN")).willReturn(subject);
         given(polls.view(subject)).willReturn(new PollView(subject, List.of(), List.of()));
@@ -128,7 +128,7 @@ class PollControllerTest {
     }
 
     @Test
-    void adminvyn_visar_båda_länkarna_och_mailtoknappen() throws Exception {
+    void admin_view_shows_both_links_and_the_mailto_button() throws Exception {
         var subject = poll();
         given(polls.byAdminToken("ADMINTOKEN")).willReturn(subject);
         given(polls.view(subject)).willReturn(new PollView(subject, List.of(), List.of()));
@@ -143,7 +143,7 @@ class PollControllerTest {
     }
 
     @Test
-    void svarsvyn_avslöjar_inte_adminlänken() throws Exception {
+    void response_view_does_not_reveal_the_admin_link() throws Exception {
         var subject = poll();
         given(polls.byResponseToken("SVARSTOKEN")).willReturn(subject);
         given(polls.view(subject)).willReturn(new PollView(subject, List.of(), List.of()));
@@ -156,7 +156,7 @@ class PollControllerTest {
     // ---------- Skapa i två steg (D-042) ----------
 
     @Test
-    void steg_ett_leder_till_dagvalet_utan_att_spara() throws Exception {
+    void step_one_leads_to_day_choice_without_saving() throws Exception {
         given(polls.candidateDays(any(), any()))
                 .willReturn(List.of(
                         new ServiceDay(LocalDate.of(2026, 12, 25), "Juldagen"),
@@ -172,7 +172,7 @@ class PollControllerTest {
     }
 
     @Test
-    void ogiltig_epost_visar_formuläret_igen_med_felet() throws Exception {
+    void invalid_email_shows_the_form_again_with_the_error() throws Exception {
         mvc.perform(step1("10.0.0.11").param("creatorEmail", "inte-en-adress"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(
@@ -180,7 +180,7 @@ class PollControllerTest {
     }
 
     @Test
-    void steg_två_skapar_och_leder_till_adminvyn() throws Exception {
+    void step_two_creates_and_leads_to_the_admin_view() throws Exception {
         given(polls.create(any(), any(), any())).willReturn(poll());
 
         mvc.perform(step2("10.0.0.12").param("day", "2026-12-25").param("day", "2026-12-26"))
@@ -188,7 +188,7 @@ class PollControllerTest {
     }
 
     @Test
-    void avvisat_dagval_visas_som_fel_på_dagsidan() throws Exception {
+    void rejected_day_choice_is_shown_as_an_error_on_the_day_page() throws Exception {
         given(polls.candidateDays(any(), any()))
                 .willReturn(List.of(new ServiceDay(LocalDate.of(2026, 12, 25), "Juldagen")));
         willThrow(new SubmissionException("Minst en dag måste vara med i förfrågan."))
@@ -202,7 +202,7 @@ class PollControllerTest {
     }
 
     @Test
-    void hastighetsgränsen_stoppar_upprepade_skapanden() throws Exception {
+    void rate_limit_stops_repeated_creations() throws Exception {
         // Taket är två i testkonfigurationen, och räknas där förfrågan faktiskt skapas.
         given(polls.create(any(), any(), any())).willReturn(poll());
         given(polls.candidateDays(any(), any()))
@@ -220,7 +220,7 @@ class PollControllerTest {
     }
 
     @Test
-    void lägg_till_datum_visar_dagen_i_listan_utan_att_spara() throws Exception {
+    void adding_a_date_shows_the_day_in_the_list_without_saving() throws Exception {
         given(polls.candidateDays(any(), any()))
                 .willReturn(List.of(
                         new ServiceDay(LocalDate.of(2026, 10, 4), "Den helige Mikaels dag"),
@@ -234,7 +234,7 @@ class PollControllerTest {
     }
 
     @Test
-    void htmx_får_bara_fragmentet_inte_hela_sidan() throws Exception {
+    void htmx_gets_only_the_fragment_not_the_whole_page() throws Exception {
         given(polls.candidateDays(any(), any()))
                 .willReturn(List.of(new ServiceDay(LocalDate.of(2026, 10, 14))));
 
@@ -248,7 +248,7 @@ class PollControllerTest {
     }
 
     @Test
-    void htmx_faller_tillbaka_till_hela_formuläret_när_fälten_är_ogiltiga() throws Exception {
+    void htmx_falls_back_to_the_whole_form_when_fields_are_invalid() throws Exception {
         // Kräver manipulerade dolda fält. Utan den här grenen skulle fragmentmallen
         // renderas med en modell byggd för skapa-formuläret och gå sönder.
         mvc.perform(step("/skapa/dagar", "10.0.0.20")
@@ -260,7 +260,7 @@ class PollControllerTest {
     }
 
     @Test
-    void avvisat_datum_visas_som_fel_på_dagsidan() throws Exception {
+    void rejected_date_is_shown_as_an_error_on_the_day_page() throws Exception {
         given(polls.candidateDays(any(), any()))
                 .willReturn(List.of(new ServiceDay(LocalDate.of(2026, 10, 4), "Den helige Mikaels dag")));
         willThrow(new SubmissionException("Den dagen finns redan i listan."))
@@ -274,7 +274,7 @@ class PollControllerTest {
     }
 
     @Test
-    void hastighetsgränsen_räknar_per_klient_inte_per_proxy() throws Exception {
+    void rate_limit_counts_per_client_not_per_proxy() throws Exception {
         // Utan X-Forwarded-For ser alla bakom proxyn ut som samma adress (D-022).
         given(polls.create(any(), any(), any())).willReturn(poll());
 

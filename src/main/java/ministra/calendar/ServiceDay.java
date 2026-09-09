@@ -1,6 +1,7 @@
 package ministra.calendar;
 
 import java.time.LocalDate;
+import org.jspecify.annotations.Nullable;
 
 /**
  * En dag med gudstjänst: datum och, om kyrkoåret känner till dagen, dess namn.
@@ -16,7 +17,7 @@ import java.time.LocalDate;
  *
  * <p>Beräknas alltid från lektionarium-API:t och persisteras aldrig. Se D-018.
  */
-public record ServiceDay(LocalDate date, String name) {
+public record ServiceDay(LocalDate date, @Nullable String name) {
 
     public ServiceDay(LocalDate date) {
         this(date, null);

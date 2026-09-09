@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Någon som svarat på en förfrågan, identifierad enbart med förnamn.
@@ -32,7 +33,7 @@ public class Participant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private @Nullable Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "poll_id", nullable = false, updatable = false)
@@ -75,7 +76,7 @@ public class Participant {
         responses.add(response);
     }
 
-    public Long getId() {
+    public @Nullable Long getId() {
         return id;
     }
 
@@ -85,14 +86,6 @@ public class Participant {
 
     public String getName() {
         return name;
-    }
-
-    public String getNameKey() {
-        return nameKey;
-    }
-
-    public Instant getSubmittedAt() {
-        return submittedAt;
     }
 
     public List<Response> getResponses() {

@@ -60,7 +60,7 @@ class PurgeServiceTest extends PostgresTest {
     }
 
     @Test
-    void raderar_förfrågningar_vars_giltighetstid_gått_ut() {
+    void deletes_polls_whose_validity_has_expired() {
         var expired = createdOn(TODAY.minusMonths(2));
 
         assertThat(purge.purgeExpired(TODAY)).isEqualTo(1);
@@ -68,7 +68,7 @@ class PurgeServiceTest extends PostgresTest {
     }
 
     @Test
-    void låter_giltiga_förfrågningar_vara() {
+    void leaves_valid_polls_alone() {
         createdOn(TODAY);
 
         assertThat(purge.purgeExpired(TODAY)).isZero();
@@ -76,7 +76,7 @@ class PurgeServiceTest extends PostgresTest {
     }
 
     @Test
-    void behåller_förfrågan_på_sista_giltiga_dagen() {
+    void keeps_the_poll_on_its_last_valid_day() {
         // "Giltig till" verkställs av nattjobbet, inte på sekunden (D-021). Dagen ut gäller.
         var poll = createdOn(TODAY.minusMonths(1));
         assertThat(poll.getValidUntil()).isEqualTo(TODAY);
@@ -85,7 +85,7 @@ class PurgeServiceTest extends PostgresTest {
     }
 
     @Test
-    void raderingen_tar_med_deltagare_och_svar() {
+    void deletion_takes_participants_and_answers_with_it() {
         var poll = createdOn(TODAY.minusMonths(2));
         answer(poll, "Anna");
         assertThat(participants.findAll()).isNotEmpty();

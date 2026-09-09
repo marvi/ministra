@@ -28,14 +28,14 @@ Postgres, och då kopplar appen tyst upp sig mot fel databas.
 
 ## Stack
 
-| Val | Detalj |
-|---|---|
-| Spring Boot 4.0.8, Java 25 | `spring-boot-starter-webmvc` |
-| **jte 3.2.4** | server-renderade mallar i `src/main/jte`, kompileras av `jte-maven-plugin` |
-| **htmx 5.1.0** | `io.github.wimdeblauwe:htmx-spring-boot` |
+| Val                                 | Detalj                                                                                        |
+|-------------------------------------|-----------------------------------------------------------------------------------------------|
+| Spring Boot 4.0.8, Java 25          | `spring-boot-starter-webmvc`                                                                  |
+| **jte 3.2.4**                       | server-renderade mallar i `src/main/jte`, kompileras av `jte-maven-plugin`                    |
+| **htmx 5.1.0**                      | `io.github.wimdeblauwe:htmx-spring-boot`                                                      |
 | PostgreSQL **16** + Spring Data JPA | befintlig delad instans på värden — se [D-001](docs/decisions.md), [D-015](docs/decisions.md) |
-| `spring-boot-starter-mail` | utgående post via SMTP till **AhaSend** — se [D-029](docs/decisions.md) |
-| `io.marvi:lektionarium-api:2.7` | kyrkoårskalender, från `https://maven.marvi.work` |
+| `spring-boot-starter-mail`          | utgående post via SMTP till **AhaSend** — se [D-029](docs/decisions.md)                       |
+| `io.marvi:lektionarium-api:2.7`     | kyrkoårskalender, från `https://maven.marvi.work`                                             |
 
 ### Vyer
 
@@ -44,8 +44,9 @@ svarsvyn med länkar, mailto-knapp, raderaknapp och förifylld namnruta ovanpå
 ([D-027](docs/decisions.md)) — bygg inte två listmallar.
 
 Skapandet sker i två steg och sparar först i det andra ([D-042](docs/decisions.md)).
-Dagvalet är kryssrutor formaterade med CSS; ingen JavaScript. Svarsvyn visar hela listan direkt, utan att kräva namn först
-([D-023](docs/decisions.md)).
+Dagvalets kryssrutor växlar med ren CSS; htmx används bara för att lägga till ett eget
+datum, och även det fungerar utan ([D-043](docs/decisions.md)). Svarsvyn visar hela listan
+direkt, utan att kräva namn först ([D-023](docs/decisions.md)).
 
 **Två fällor i den här stacken.** `gg.jte.development-mode=false` kräver att
 `gg.jte.use-precompiled-templates=true` också sätts — annars vägrar jte att starta.
@@ -113,9 +114,12 @@ Tre konsekvenser som påverkar koden direkt:
 
 ## Språk
 
-- **Kod på engelska** — klasser, metoder, fält, kommentarer, commit-meddelanden, testnamn.
-  Undantag: stegnamn och kommentarer i `.github/workflows/` är svenska, som i
-  lektionarium ([D-038](docs/decisions.md)).
+- **Identifierare på engelska** — klasser, metoder, fält, testnamn, commit-meddelanden.
+  Testnamn är identifierare: de skrivs på kommandorad och hamnar i CI-rapporter, så inga
+  å, ä eller ö där ([D-004](docs/decisions.md)). Undantag: stegnamnen i
+  `.github/workflows/` är svenska, som i lektionarium ([D-038](docs/decisions.md)).
+- **Kommentarer och javadoc på svenska**, som resten av dokumentationen. Domänorden och
+  D-hänvisningarna ska inte behöva översättas mitt i koden.
 - **UI på svenska** — all text som en användare ser, inklusive validerings- och felmeddelanden.
 - Domänbegrepp behåller sin svenska form i UI men översätts i kod: `Förfrågan` → `Poll`,
   `Deltagare` → `Participant`, `Svar` → `Response`.
@@ -126,13 +130,13 @@ Förbedjare, textläsare, ministranter, kyrkvärdar och lovsångsledare är **sa
 modellen**. Det finns ingen roll-typ och ska inte finnas ([D-005](docs/decisions.md)).
 Vad förfrågan gäller framgår enbart av dess titel — "Sakristaner fram till påsk".
 
-| Svenska (UI) | Kod | Vad det är |
-|---|---|---|
-| Förfrågan / plan | `Poll` | **Entitet.** Titel, kommentar, start- och slutdatum, giltig till, skaparens förnamn och e-post, två tokens |
-| Deltagare | `Participant` | **Entitet.** Någon som svarat, identifierad enbart med förnamn |
-| Svar | `Response` | **Entitet.** En rad per dag: deltagare, datum, `Availability` |
-| — | `Availability` | **Enum.** `CAN` / `IF_NEEDED` / `CANNOT` (grön / gul / röd) |
-| Gudstjänstdag | `ServiceDay` | **Beräknad record**, aldrig persisterad — datum och kyrkoårsnamn ([D-018](docs/decisions.md)). Liturgisk färg visas inte ([D-037](docs/decisions.md)) |
+| Svenska (UI)     | Kod            | Vad det är                                                                                                                                            |
+|------------------|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Förfrågan / plan | `Poll`         | **Entitet.** Titel, kommentar, start- och slutdatum, giltig till, skaparens förnamn och e-post, två tokens                                            |
+| Deltagare        | `Participant`  | **Entitet.** Någon som svarat, identifierad enbart med förnamn                                                                                        |
+| Svar             | `Response`     | **Entitet.** En rad per dag: deltagare, datum, `Availability`                                                                                         |
+| —                | `Availability` | **Enum.** `CAN` / `IF_NEEDED` / `CANNOT` (grön / gul / röd)                                                                                           |
+| Gudstjänstdag    | `ServiceDay`   | **Beräknad record**, aldrig persisterad — datum och kyrkoårsnamn ([D-018](docs/decisions.md)). Liturgisk färg visas inte ([D-037](docs/decisions.md)) |
 
 Enum-konstanterna är engelska som all annan kod; översättningen till "Kan", "Om det
 behövs" och "Kan inte" sker i vyn.
@@ -260,6 +264,15 @@ Lägg inte till fler jobb utan att fråga.
 - `var` när typen framgår av högerledet; annars explicit typ.
 - Konstruktorinjektion, aldrig `@Autowired` på fält. Inget Lombok.
 - `Optional` som returtyp, aldrig som fält eller parameter.
+- **JSpecify.** Varje paket är `@NullMarked` (se `package-info.java`), så icke-null är
+  normalfallet. Det som verkligen kan vara null säger det med `@Nullable` — entiteters
+  `id` före persistering, `ServiceDay.name`, `Poll.comment`, valfria request-parametrar.
+  Sätt aldrig `@Nullable` för att tysta en varning; sätt den för att det är sant.
+- **Lita inte blint på IDE:ns inspektioner på JPA-entiteter.** "Field can be final",
+  "field can be local variable" och "collection updated but never queried" är fel där:
+  Hibernate läser och skriver fälten via reflektion, och `final` bryter proxying.
+  Detsamma gäller "cannot resolve MVC view" (IDE:n känner inte jte) och "no beans of
+  JavaMailSender" (autokonfigurerad, villkorad på `spring.mail.host`). Se FRAGOR.md.
 - `MinistraApplication.main` är avsiktligt package-private instansstil (Java 25) — behåll.
 - Paketstruktur efter funktion, inte lager: `ministra.poll`, `ministra.calendar`,
   `ministra.mail` — inte `controller`, `service`, `repository`.

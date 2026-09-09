@@ -31,7 +31,7 @@ class MailTextsTest {
     }
 
     @Test
-    void skapelsemejlet_innehåller_båda_länkarna() {
+    void creation_email_contains_both_links() {
         var body = texts.creationBody(poll("Sakristaner fram till påsk", "Hör av dig vid frågor."));
 
         assertThat(body).contains("Hej Markus!");
@@ -41,7 +41,7 @@ class MailTextsTest {
     }
 
     @Test
-    void skapelsemejlet_tar_inte_med_kommentaren() {
+    void creation_email_leaves_out_the_comment() {
         // Skapandet är en oautentiserad utgång som mejlar till en användarangiven adress.
         // Ju mindre fritext som lämnar vår avsändardomän desto bättre (D-016).
         var body = texts.creationBody(poll("Sakristaner", "SPAM SPAM köp billiga piller"));
@@ -50,7 +50,7 @@ class MailTextsTest {
     }
 
     @Test
-    void skapelsemejlet_kortar_långa_titlar() {
+    void creation_email_shortens_long_titles() {
         var body = texts.creationBody(poll("x".repeat(200), null));
 
         assertThat(body).contains("x".repeat(80) + "…");
@@ -58,14 +58,14 @@ class MailTextsTest {
     }
 
     @Test
-    void sammanfattningens_ämne_namnger_förfrågan_när_det_bara_finns_en() {
+    void digest_subject_names_the_poll_when_there_is_only_one() {
         var item = new MailTexts.DigestItem(poll("Textläsare i höst", null), List.of("Anna"));
 
         assertThat(texts.digestSubject(List.of(item))).isEqualTo("Nya svar på \"Textläsare i höst\"");
     }
 
     @Test
-    void sammanfattningens_ämne_är_allmänt_när_det_finns_flera() {
+    void digest_subject_is_generic_when_there_are_several() {
         var items =
                 List.of(
                         new MailTexts.DigestItem(poll("En", null), List.of("Anna")),
@@ -75,7 +75,7 @@ class MailTextsTest {
     }
 
     @Test
-    void sammanfattningen_listar_namnen_och_adminlänken() {
+    void digest_lists_the_names_and_the_admin_link() {
         var items =
                 List.of(
                         new MailTexts.DigestItem(
@@ -90,7 +90,7 @@ class MailTextsTest {
     }
 
     @Test
-    void inbjudan_talar_om_dagar_inte_söndagar() {
+    void invitation_speaks_of_days_not_sundays() {
         // Listan innehåller även jul, påsk och andra helgdagar (D-040).
         var body = texts.invitationBody(poll("Sakristaner", null));
 
@@ -99,7 +99,7 @@ class MailTextsTest {
     }
 
     @Test
-    void mailto_har_skaparen_som_mottagare_och_ingen_annan() {
+    void mailto_has_the_creator_as_recipient_and_no_one_else() {
         var mailto = texts.invitationMailto(poll("Sakristaner", null));
 
         assertThat(mailto).startsWith("mailto:markus%40example.se?subject=");
@@ -107,7 +107,7 @@ class MailTextsTest {
     }
 
     @Test
-    void mailto_procentkodar_svenska_tecken_som_utf8() {
+    void mailto_percent_encodes_swedish_characters_as_utf8() {
         var mailto = texts.invitationMailto(poll("Sakristaner", null));
 
         // ö:et i "behövs" och "förnamn" ska bli %C3%B6, inte tappa prickarna.
@@ -119,14 +119,14 @@ class MailTextsTest {
     }
 
     @Test
-    void mailto_kodar_mellanslag_som_procent20_inte_plus() {
+    void mailto_encodes_spaces_as_percent20_not_plus() {
         var mailto = texts.invitationMailto(poll("Två ord", null));
 
         assertThat(mailto).doesNotContain("+");
     }
 
     @Test
-    void inbjudan_har_länken_tidigt() {
+    void invitation_has_the_link_early() {
         var body = texts.invitationBody(poll("Sakristaner", null));
 
         var linkPosition = body.indexOf("https://ministra.marvi.work/s/SVARSTOKEN");
@@ -135,7 +135,7 @@ class MailTextsTest {
     }
 
     @Test
-    void inbjudan_tar_med_kommentaren_när_den_finns() {
+    void invitation_includes_the_comment_when_there_is_one() {
         // Det här mejlet lämnar aldrig vår server, så kommentaren är ofarlig här (D-035).
         var body = texts.invitationBody(poll("Sakristaner", "Vi ses i sakristian kl 9."));
 
@@ -143,7 +143,7 @@ class MailTextsTest {
     }
 
     @Test
-    void inbjudan_lämnar_inget_hål_när_kommentaren_saknas() {
+    void invitation_leaves_no_gap_when_the_comment_is_missing() {
         var body = texts.invitationBody(poll("Sakristaner", null));
 
         assertThat(body).doesNotContain("\n\n\n");
