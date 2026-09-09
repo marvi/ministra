@@ -24,4 +24,7 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
     List<Participant> findWithResponses(@Param("poll") Poll poll);
 
     boolean existsByPollAndNameKey(Poll poll, String nameKey);
+
+    /** Bara för loggraderna. Förfrågan exponerar inte sin deltagarlista. */
+    long countByPoll(Poll poll);
 }

@@ -15,6 +15,8 @@ import ministra.calendar.ServiceDay;
 import ministra.mail.MailTexts;
 import ministra.mail.OutboxEmail;
 import ministra.mail.OutboxRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 /** Skapar förfrågningar, tar emot svar och bygger listvyn. */
 @Service
 public class PollService {
+
+    // Aldrig titel, namn, adresser eller tokens i loggen (AGENTS.md, punkt 8). Bara
+    // databas-id, datum och antal.
+    private static final Logger log = LoggerFactory.getLogger(PollService.class);
 
     /** Perioden får vara högst ett halvår (D-020). */
     public static final int MAX_PERIOD_MONTHS = 6;
@@ -180,6 +186,13 @@ public class PollService {
         outbox.save(
                 new OutboxEmail(
                         poll.getCreatorEmail(), texts.creationSubject(poll), texts.creationBody(poll)));
+        log.info(
+                "Skapade förfrågan {}: {} dagar {}–{}, giltig till {}",
+                poll.getId(),
+                inPeriod.size(),
+                form.startDate(),
+                form.endDate(),
+                poll.getValidUntil());
         return poll;
     }
 
@@ -259,7 +272,13 @@ public class PollService {
         }
         try {
             poll.addParticipant(participant);
-            return participants.save(participant);
+            var saved = participants.save(participant);
+            log.info(
+                    "Nytt svar på förfrågan {}: {} dagar besvarade, {} svar totalt",
+                    poll.getId(),
+                    saved.getResponses().size(),
+                    participants.countByPoll(poll));
+            return saved;
         } catch (DataIntegrityViolationException e) {
             // Två svar med samma namn samtidigt. Databasen är den som avgör.
             throw new SubmissionException(
@@ -318,7 +337,14 @@ public class PollService {
     @Transactional
     public void delete(Poll detached) {
         // Samma skäl som i submit: kaskaden behöver en förfrågan som sessionen känner till.
-        polls.findById(detached.getId()).ifPresent(polls::delete);
+        polls.findById(detached.getId())
+                .ifPresent(
+                        poll -> {
+                            var count = participants.countByPoll(poll);
+                            polls.delete(poll);
+                            log.info(
+                                    "Skaparen raderade förfrågan {} med {} svar", poll.getId(), count);
+                        });
     }
 
     private Poll managed(Poll detached) {

@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import ministra.mail.DigestService;
 import ministra.poll.PurgeService;
 import ministra.web.RateLimiter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +18,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class NightlyJob {
+
+    private static final Logger log = LoggerFactory.getLogger(NightlyJob.class);
 
     private final DigestService digests;
     private final PurgeService purge;
@@ -33,8 +37,13 @@ public class NightlyJob {
     @Scheduled(cron = "0 0 22 * * *", zone = "Europe/Stockholm")
     public void run() {
         var now = clock.instant();
-        digests.queueDigests(now);
-        purge.purgeExpired(LocalDate.now(clock));
+        log.info("Nattpasset börjar");
+        var digestCount = digests.queueDigests(now);
+        var purged = purge.purgeExpired(LocalDate.now(clock));
         rateLimiter.evictStale(now);
+        log.info(
+                "Nattpasset klart: {} sammanfattningar köade, {} förfrågningar raderade",
+                digestCount,
+                purged);
     }
 }

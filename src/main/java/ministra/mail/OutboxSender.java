@@ -67,10 +67,11 @@ public class OutboxSender {
             // Raden raderas när mejlet gått iväg. Brödtexten innehåller förnamn och ska
             // inte bli ett arkiv (D-028).
             outbox.delete(email);
+            // Aldrig mottagaradress eller ämnesrad i loggen: ämnet bär förfrågans titel.
+            log.info("Skickade mejl {} på försök {}", email.getId(), email.getAttempts() + 1);
         } catch (MailException e) {
             email.recordFailure(e.getMessage(), now);
             outbox.save(email);
-            // Aldrig mottagaradressen i loggen, inte ens på DEBUG.
             if (email.isExhausted()) {
                 log.error(
                         "Mejl {} gav upp efter {} försök: {}",

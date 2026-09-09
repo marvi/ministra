@@ -3,6 +3,8 @@ package ministra.web;
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -39,6 +41,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  */
 @Controller
 public class PollController {
+
+    private static final Logger log = LoggerFactory.getLogger(PollController.class);
 
     private final PollService polls;
     private final MailTexts texts;
@@ -155,6 +159,8 @@ public class PollController {
         var kept = parseDates(keptDays);
         var added = parseDates(addedDays);
         if (!rateLimiter.tryAcquire(RateLimiter.clientIp(request), clock.instant())) {
+            // Utan adressen: den är en personuppgift, och räknaren vet ändå vilken det är.
+            log.warn("Nekade ett skapande på grund av hastighetsgränsen");
             return dayChoice(
                     model,
                     form,
