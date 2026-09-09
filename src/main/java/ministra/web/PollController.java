@@ -233,13 +233,21 @@ public class PollController {
 
     // ---------- Svara ----------
 
+    /**
+     * {@code ?tack} sätts av omdirigeringen efter ett sparat svar. Bara en flagga, inget
+     * namn: adressen ska inte bära personuppgifter, och sidan är ändå stateless.
+     */
     @GetMapping("/s/{token}")
-    public String respond(@PathVariable String token, Model model) {
+    public String respond(
+            @PathVariable String token,
+            @RequestParam(name = "tack", required = false) @Nullable String thanks,
+            Model model) {
         var poll = polls.byResponseToken(token);
         model.addAttribute("view", polls.view(poll));
         model.addAttribute("admin", false);
         model.addAttribute("prefilledName", "");
         model.addAttribute("error", null);
+        model.addAttribute("thanked", thanks != null);
         model.addAttribute("submitPath", "/s/" + token);
         return "poll";
     }
@@ -257,11 +265,15 @@ public class PollController {
     // ---------- Administrera ----------
 
     @GetMapping("/a/{token}")
-    public String admin(@PathVariable String token, Model model) {
+    public String admin(
+            @PathVariable String token,
+            @RequestParam(name = "tack", required = false) @Nullable String thanks,
+            Model model) {
         var poll = polls.byAdminToken(token);
         addAdminAttributes(model, poll);
         var view = polls.view(poll);
         model.addAttribute("view", view);
+        model.addAttribute("thanked", thanks != null);
         model.addAttribute("canPropose", ScheduleView.canPropose(view));
         model.addAttribute("prefilledName", poll.getCreatorName());
         model.addAttribute("error", null);
@@ -328,12 +340,13 @@ public class PollController {
             String path) {
         try {
             polls.submit(poll, name, parseAnswers(allParams));
-            return "redirect:" + path;
+            return "redirect:" + path + "?tack";
         } catch (SubmissionException e) {
             var view = polls.view(poll);
             model.addAttribute("view", view);
             model.addAttribute("prefilledName", name);
             model.addAttribute("error", e.getMessage());
+            model.addAttribute("thanked", false);
             if (admin) {
                 addAdminAttributes(model, poll);
                 model.addAttribute("canPropose", ScheduleView.canPropose(view));

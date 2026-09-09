@@ -153,6 +153,39 @@ class PollControllerTest {
                         org.hamcrest.Matchers.containsString("ADMINTOKEN"))));
     }
 
+    // ---------- Tack efter ett svar ----------
+
+    @Test
+    void saved_response_redirects_to_a_thank_you() throws Exception {
+        var subject = poll();
+        given(polls.byResponseToken("SVARSTOKEN")).willReturn(subject);
+        given(polls.view(subject)).willReturn(new PollView(subject, List.of(), List.of("Frida")));
+
+        mvc.perform(post("/s/SVARSTOKEN").param("name", "Frida").param("d-2026-10-04", "CAN"))
+                .andExpect(redirectedUrl("/s/SVARSTOKEN?tack"));
+        mvc.perform(get("/s/SVARSTOKEN").param("tack", ""))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Tack, ditt svar är sparat")));
+        mvc.perform(get("/s/SVARSTOKEN"))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("Tack, ditt svar"))));
+    }
+
+    @Test
+    void rejected_response_shows_the_error_not_a_thank_you() throws Exception {
+        var subject = poll();
+        given(polls.byResponseToken("SVARSTOKEN")).willReturn(subject);
+        given(polls.view(subject)).willReturn(new PollView(subject, List.of(), List.of()));
+        willThrow(new SubmissionException("Alla dagar måste besvaras."))
+                .given(polls).submit(any(), anyString(), any());
+
+        mvc.perform(post("/s/SVARSTOKEN").param("name", "Frida"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Alla dagar måste besvaras")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("Tack, ditt svar"))));
+    }
+
     // ---------- Förslag på schema (D-046) ----------
 
     private PollView threeResponses(Poll subject) {

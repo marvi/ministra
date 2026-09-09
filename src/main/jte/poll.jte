@@ -12,6 +12,7 @@
 @param String adminBase = null
 @param String mailto = null
 @param boolean canPropose = false
+@param boolean thanked = false
 
 @template.layout(title = view.poll().getTitle(), content = @`
     <h1>${view.poll().getTitle()}</h1>
@@ -32,6 +33,9 @@
     <%-- Synligt för alla, inte bara skaparen. Ärligt om vad som händer med svaren. --%>
     <p class="meta">Raderas efter ${Dates.format(view.poll().getValidUntil())}.</p>
 
+    @if(thanked)
+        <p class="notice" role="status">Tack, ditt svar är sparat.</p>
+    @endif
     @if(error != null)
         <p class="error">${error}</p>
     @endif
