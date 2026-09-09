@@ -165,6 +165,37 @@ class PollControllerTest {
     }
 
     @Test
+    void schedule_button_appears_at_three_responses_not_two() throws Exception {
+        var subject = poll();
+        given(polls.byAdminToken("ADMINTOKEN")).willReturn(subject);
+
+        given(polls.view(subject)).willReturn(new PollView(subject, List.of(), List.of("Frida", "Ola")));
+        mvc.perform(get("/a/ADMINTOKEN"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("/a/ADMINTOKEN/schema"))))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("minst tre har svarat")));
+
+        given(polls.view(subject)).willReturn(threeResponses(subject));
+        mvc.perform(get("/a/ADMINTOKEN"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Ge förslag på schema")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/a/ADMINTOKEN/schema\"")));
+    }
+
+    @Test
+    void response_view_never_shows_the_schedule_button() throws Exception {
+        // Schemat är skaparens arbete, inte gruppens vy.
+        var subject = poll();
+        given(polls.byResponseToken("SVARSTOKEN")).willReturn(subject);
+        given(polls.view(subject)).willReturn(threeResponses(subject));
+
+        mvc.perform(get("/s/SVARSTOKEN"))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("schema"))));
+    }
+
+    @Test
     void schedule_page_is_shown_under_the_admin_token() throws Exception {
         var subject = poll();
         given(polls.byAdminToken("ADMINTOKEN")).willReturn(subject);

@@ -39,9 +39,12 @@ Postgres, och då kopplar appen tyst upp sig mot fel databas.
 
 ### Vyer
 
-Det finns fyra: skapa-formuläret, dagvalet, svarsvyn och admin-vyn. Admin-vyn **är**
-svarsvyn med länkar, mailto-knapp, raderaknapp och förifylld namnruta ovanpå
-([D-027](docs/decisions.md)) — bygg inte två listmallar.
+Det finns fem: skapa-formuläret, dagvalet, svarsvyn, admin-vyn och arbetsbladet för
+förslag på schema. Admin-vyn **är** svarsvyn med länkar, mailto-knapp, raderaknapp och
+förifylld namnruta ovanpå ([D-027](docs/decisions.md)) — bygg inte två listmallar.
+Arbetsbladet ([D-046](docs/decisions.md)) ligger under admin-token, räknas fram av
+`ministra.schedule.Scheduler` och sköts därefter helt av `static/js/schedule.js`; servern
+sparar ingenting av det.
 
 Skapandet sker i två steg och sparar först i det andra ([D-042](docs/decisions.md)).
 Dagvalets kryssrutor växlar med ren CSS; htmx används bara för att lägga till ett eget

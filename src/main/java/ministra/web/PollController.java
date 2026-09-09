@@ -35,8 +35,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
- * Fyra vyer: skapa-formuläret, dagvalet, svarsvyn och admin-vyn. Admin-vyn är svarsvyn
- * med länkar och knappar ovanpå, inte en egen lista (D-027).
+ * Fem vyer: skapa-formuläret, dagvalet, svarsvyn, admin-vyn och arbetsbladet för förslag
+ * på schema. Admin-vyn är svarsvyn med länkar och knappar ovanpå, inte en egen lista
+ * (D-027). Arbetsbladet (D-046) ligger under admin-token och sparar ingenting.
  *
  * <p>Skapandet sker i två steg och sparar först i det andra (D-042).
  */
@@ -259,7 +260,9 @@ public class PollController {
     public String admin(@PathVariable String token, Model model) {
         var poll = polls.byAdminToken(token);
         addAdminAttributes(model, poll);
-        model.addAttribute("view", polls.view(poll));
+        var view = polls.view(poll);
+        model.addAttribute("view", view);
+        model.addAttribute("canPropose", ScheduleView.canPropose(view));
         model.addAttribute("prefilledName", poll.getCreatorName());
         model.addAttribute("error", null);
         return "poll";
@@ -327,11 +330,13 @@ public class PollController {
             polls.submit(poll, name, parseAnswers(allParams));
             return "redirect:" + path;
         } catch (SubmissionException e) {
-            model.addAttribute("view", polls.view(poll));
+            var view = polls.view(poll);
+            model.addAttribute("view", view);
             model.addAttribute("prefilledName", name);
             model.addAttribute("error", e.getMessage());
             if (admin) {
                 addAdminAttributes(model, poll);
+                model.addAttribute("canPropose", ScheduleView.canPropose(view));
             } else {
                 model.addAttribute("admin", false);
                 model.addAttribute("submitPath", path);

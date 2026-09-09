@@ -11,6 +11,7 @@
 @param String adminUrl = null
 @param String adminBase = null
 @param String mailto = null
+@param boolean canPropose = false
 
 @template.layout(title = view.poll().getTitle(), content = @`
     <h1>${view.poll().getTitle()}</h1>
@@ -48,6 +49,18 @@
                 <code>${adminUrl}</code>
                 <p class="meta">Med den ser du svaren och kan radera förfrågan.
                     Båda länkarna har också mejlats till dig.</p>
+            </div>
+            <%-- Förslaget är ett hjälpmedel, avgörandet är skaparens, och inget sparas (D-046).
+                 Knappen kommer först när det finns något att fördela. --%>
+            <div class="link-row">
+                <strong>Förslag på schema</strong>
+                @if(canPropose)
+                    <p class="meta">Appen fördelar dem som svarat på dagarna. Du flyttar om som du
+                        vill och tar med dig resultatet som text. Inget sparas.</p>
+                    <a class="button" href="${adminBase}/schema">Ge förslag på schema</a>
+                @else
+                    <p class="meta">Går att få när minst tre har svarat.</p>
+                @endif
             </div>
         </div>
     @endif
