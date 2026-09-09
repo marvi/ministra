@@ -78,7 +78,9 @@ behöver ges för hand (D-039).
 tools/release.sh
 ```
 
-Skriptet taggar `vX.Y`. Taggen får GitHub Actions att bygga, testa och publicera avbilden
+Skriptet släpper versionen pom-filen står på, taggar `vX.Y.Z` och höjer sedan pom-filen
+ett patchsteg. Ska X eller Y höjas anger man versionen: `tools/release.sh --version 1.3`.
+Taggen får GitHub Actions att bygga, testa och publicera avbilden
 till `ghcr.io/marvi/ministra`, trigga `podman auto-update` på servern över tailnetet, och
 sedan vänta tills `/actuator/health` svarar UP genom Caddy. Startar den nya avbilden inte
 rullar podman tillbaka och flödet blir rött.

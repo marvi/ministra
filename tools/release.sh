@@ -7,10 +7,13 @@
 # steg för nästa gång. Taggen är det som utlöser publiceringen av
 # containeravbilden: se .github/workflows/release.yml
 #
-# Versionerna går i steg om 0.1: 2.1, 2.2, ... 2.9, 3.0
+# Versionerna är X.Y.Z. Utan flagga släpps den version pom-filen står på och
+# nästa blir ett patchsteg upp: 1.2.3 -> 1.2.4. Vill man höja X eller Y anger
+# man versionen själv med --version, så fortsätter pom-filen på X.Y.1.
 #
-#   tools/release.sh              # nästa version enligt pom-filen
-#   tools/release.sh --version 3.0
+#   tools/release.sh              # versionen enligt pom-filen, t.ex. 1.2.3
+#   tools/release.sh --version 1.3
+#   tools/release.sh --version 2.0.0
 #   tools/release.sh --dry-run    # visa vad som skulle hända
 #
 set -euo pipefail
@@ -83,20 +86,16 @@ if [ -z "$version" ]; then
   version="${pom_version%-SNAPSHOT}"
 fi
 
-case "$version" in
-[0-9]*.[0-9]*) ;;
-*) die "Versionen '$version' ser inte ut som X.Y" ;;
-esac
+printf '%s' "$version" | grep -Eq '^[0-9]+\.[0-9]+(\.[0-9]+)?$' ||
+  die "Versionen '$version' ser inte ut som X.Y.Z"
 
-# Nästa version: steg om 0.1, där tiondelen slår över till nästa heltal.
-major=${version%%.*}
+# Nästa version: ett patchsteg upp. En version utan patchdel, t.ex. 1.3,
+# räknas som 1.3.0 och följs av 1.3.1.
+major=$(printf '%s' "$version" | cut -d. -f1)
 minor=$(printf '%s' "$version" | cut -d. -f2)
-minor=$((minor + 1))
-if [ "$minor" -ge 10 ]; then
-  major=$((major + 1))
-  minor=0
-fi
-next_version="$major.$minor"
+patch=$(printf '%s' "$version" | cut -d. -f3)
+patch=$((${patch:-0} + 1))
+next_version="$major.$minor.$patch"
 
 # Versionen måste vara högre än allt som redan släppts, annars räknar Maven
 # den nya artefakten som äldre än en befintlig.
