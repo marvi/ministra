@@ -153,6 +153,57 @@ class PollControllerTest {
                         org.hamcrest.Matchers.containsString("ADMINTOKEN"))));
     }
 
+    // ---------- Förslag på schema (D-046) ----------
+
+    private PollView threeResponses(Poll subject) {
+        var day = new ServiceDay(LocalDate.of(2026, 10, 4), "Den helige Mikaels dag");
+        return new PollView(
+                subject,
+                List.of(new ministra.poll.ServiceDayView(
+                        day, List.of("Frida", "Ola"), List.of("Maja"), List.of())),
+                List.of("Frida", "Ola", "Maja"));
+    }
+
+    @Test
+    void schedule_page_is_shown_under_the_admin_token() throws Exception {
+        var subject = poll();
+        given(polls.byAdminToken("ADMINTOKEN")).willReturn(subject);
+        given(polls.view(subject)).willReturn(threeResponses(subject));
+
+        mvc.perform(get("/a/ADMINTOKEN/schema"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Ett förslag, inget är sparat")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Den helige Mikaels dag")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Frida")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/a/ADMINTOKEN\"")));
+    }
+
+    @Test
+    void schedule_page_answers_404_to_the_response_token() throws Exception {
+        // Schemat är skaparens arbete, inte gruppens vy. Svarstoken är okänt här.
+        given(polls.byAdminToken(anyString())).willThrow(new PollNotFoundException());
+
+        mvc.perform(get("/a/SVARSTOKEN/schema"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void per_day_outside_one_to_four_falls_back_to_one() throws Exception {
+        var subject = poll();
+        given(polls.byAdminToken("ADMINTOKEN")).willReturn(subject);
+        given(polls.view(subject)).willReturn(threeResponses(subject));
+
+        mvc.perform(get("/a/ADMINTOKEN/schema").param("perDag", "9"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("1 per dag")));
+        mvc.perform(get("/a/ADMINTOKEN/schema").param("perDag", "abc"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("1 per dag")));
+        mvc.perform(get("/a/ADMINTOKEN/schema").param("perDag", "2"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("2 per dag")));
+    }
+
     // ---------- Skapa i två steg (D-042) ----------
 
     @Test

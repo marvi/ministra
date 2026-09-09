@@ -21,6 +21,7 @@ import ministra.poll.Poll;
 import ministra.poll.PollNotFoundException;
 import ministra.poll.PollService;
 import ministra.poll.SubmissionException;
+import ministra.schedule.ScheduleView;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -272,6 +273,28 @@ public class PollController {
             Model model) {
         var poll = polls.byAdminToken(token);
         return submitTo(poll, name, allParams, model, true, "/a/" + token);
+    }
+
+    /**
+     * Förslag på schema (D-046). Servern räknar fram förslaget och renderar det; allt
+     * därefter sker i webbläsaren och ingenting sparas. Bara admin-token: schemat är
+     * skaparens arbete, inte gruppens vy.
+     */
+    @GetMapping("/a/{token}/schema")
+    public String schedule(
+            @PathVariable String token,
+            @RequestParam(name = "perDag", required = false) @Nullable String perDag,
+            Model model) {
+        var poll = polls.byAdminToken(token);
+        var view = ScheduleView.of(polls.view(poll), ScheduleView.clampPerDay(perDag));
+        log.info(
+                "Föreslog schema för förfrågan {}: {} dagar, {} personer",
+                poll.getId(),
+                view.days().size(),
+                view.people().size());
+        model.addAttribute("view", view);
+        model.addAttribute("adminBase", "/a/" + poll.getAdminToken());
+        return "schedule";
     }
 
     @PostMapping("/a/{token}/radera")
