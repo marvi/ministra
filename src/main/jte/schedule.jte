@@ -44,7 +44,7 @@
                         data-if-needed="${String.join(" ", person.answers().entrySet().stream().filter(e -> e.getValue() == Availability.IF_NEEDED).map(e -> e.getKey().toString()).sorted().toList())}">
                         <button type="button" class="tile-pick">
                             <span class="tile-name">${person.name()}</span>
-                            <span class="count" aria-label="${person.count()} dagar">${person.count()}</span>
+                            <span class="count" aria-label="${person.count() == 1 ? "1 dag" : person.count() + " dagar"}">${person.count()}</span>
                         </button>
                         <button type="button" class="tile-remove needs-js"
                                 aria-label="Ta bort ${person.name()} från arbetsbladet">×</button>
@@ -96,4 +96,5 @@
         <%-- Skärmläsare får "Frida flyttad till söndag 4 oktober" vid varje flytt. --%>
         <div class="visually-hidden" id="live" aria-live="polite"></div>
     </div>
+    <script src="/js/schedule.js" defer></script>
 `)
