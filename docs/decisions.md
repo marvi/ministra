@@ -692,16 +692,21 @@ Hej {förnamn}!
 
 Din förfrågan "{titel}" är skapad. Du har två länkar.
 
-Skicka den här till dem som ska svara:
+Länk att skicka till dem som skall svara:
 {svarslänk}
 
-Den här är din egen. Spara den — med den ser du svaren och kan radera förfrågan:
+Din länk för att se resultatet:
 {adminlänk}
 
 Förfrågan och alla svar raderas automatiskt efter {giltig till}.
 
 Ministra
 ```
+
+> **Ändrat 2026-09-09:** de två länkraderna löd tidigare "Skicka den här till dem som ska
+> svara:" och "Den här är din egen. Spara den — med den ser du svaren och kan radera
+> förfrågan:". De är kortade och lyder nu som rubrikerna i länkrutan på skaparens sida,
+> så att mejlet och skärmen säger samma sak.
 
 **Kommentarsfältet får inte med.** Skapandet är en oautentiserad utgång som mejlar till
 en användarangiven adress ([D-016](#d-016--skaparen-får-länkarna-både-på-skärmen-och-per-mejl)),

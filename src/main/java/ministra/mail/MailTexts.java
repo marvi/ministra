@@ -39,10 +39,10 @@ public class MailTexts {
 
                 Din förfrågan "%s" är skapad. Du har två länkar.
 
-                Skicka den här till dem som ska svara:
+                Länk att skicka till dem som skall svara:
                 %s
 
-                Den här är din egen. Spara den — med den ser du svaren och kan radera förfrågan:
+                Din länk för att se resultatet:
                 %s
 
                 Förfrågan och alla svar raderas automatiskt efter %s.
