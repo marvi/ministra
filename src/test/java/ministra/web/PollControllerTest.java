@@ -195,13 +195,13 @@ class PollControllerTest {
 
         mvc.perform(get("/a/ADMINTOKEN/schema").param("perDag", "9"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("1 per dag")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"1\" selected")));
         mvc.perform(get("/a/ADMINTOKEN/schema").param("perDag", "abc"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("1 per dag")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"1\" selected")));
         mvc.perform(get("/a/ADMINTOKEN/schema").param("perDag", "2"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("2 per dag")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"2\" selected")));
     }
 
     // ---------- Skapa i två steg (D-042) ----------

@@ -19,6 +19,8 @@ public final class Dates {
             DateTimeFormatter.ofPattern("d MMMM yyyy", SWEDISH);
     private static final DateTimeFormatter WITH_WEEKDAY =
             DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", SWEDISH);
+    private static final DateTimeFormatter SHORT_FORM =
+            DateTimeFormatter.ofPattern("EEE d MMM", SWEDISH);
 
     private Dates() {}
 
@@ -33,5 +35,14 @@ public final class Dates {
      */
     public static String formatWithWeekday(LocalDate date) {
         return WITH_WEEKDAY.format(date);
+    }
+
+    /**
+     * "sön 4 okt" — för schemat som text på urklipp (D-046), där varje dag är en rad och
+     * ska vara kort. Java sätter punkt efter förkortade månader ("okt.") men inte efter
+     * "maj"; punkten tas bort så att raderna blir lika.
+     */
+    public static String formatShort(LocalDate date) {
+        return SHORT_FORM.format(date).replace(".", "");
     }
 }

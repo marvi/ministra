@@ -1,5 +1,6 @@
 @param String title
 @param gg.jte.Content content
+@param boolean wide = false
 <!DOCTYPE html>
 <html lang="sv">
 <head>
@@ -15,7 +16,7 @@
 <header class="topbar">
     <a class="wordmark" href="/">Ministra</a>
 </header>
-<main>
+<main class="${wide ? "wide" : ""}">
     ${content}
 </main>
 <footer class="footer">
