@@ -45,3 +45,6 @@ target/
 .env.*
 !*.env.example
 ministra.env
+
+### Claude Code ###
+.claude/
