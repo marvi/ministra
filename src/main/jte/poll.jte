@@ -42,10 +42,10 @@
         <div class="admin-panel">
             <h2>Dina länkar</h2>
             <div class="link-row">
-                <strong>Skicka den här till dem som ska svara</strong>
+                <strong>Länk att skicka till dem som skall svara:</strong>
                 <div class="actions">
                     <button type="button" class="button secondary needs-js copy-link">Kopiera länken</button>
-                    <a class="button secondary" href="${mailto}">Skriv mejlet i din e-post</a>
+                    <a class="button secondary" href="${mailto}">Skicka via e-post</a>
                     <button type="button" class="button secondary needs-js reveal-link"
                             aria-expanded="false">Visa länken</button>
                 </div>
@@ -53,7 +53,7 @@
                 <p class="meta copy-status" role="status"></p>
             </div>
             <div class="link-row">
-                <strong>Den här är din egen — spara den</strong>
+                <strong>Din länk för att se resultatet:</strong>
                 <div class="actions">
                     <button type="button" class="button secondary needs-js copy-link">Kopiera länken</button>
                     <button type="button" class="button secondary needs-js reveal-link"
