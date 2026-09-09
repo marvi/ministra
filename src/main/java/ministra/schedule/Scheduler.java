@@ -31,6 +31,11 @@ import org.jspecify.annotations.Nullable;
  *       inte kronologiskt. Utdata är kronologisk ändå.
  * </ol>
  *
+ * <p>Två pass: först fylls allt som går att fylla med gröna, sedan resten med gula. En dag
+ * som saknar gröna avgörs alltså sist, när det syns vem de gröna dagarna redan tagit i
+ * anspråk. Annars skulle den som är ensam grön en dag kunna få även den gula dagen intill,
+ * bara för att den fylldes först.
+ *
  * <p>Lika-fall avgörs av svarsordningen, aldrig av namn i bokstavsordning, så att inte
  * "Anna" alltid får mer än "Åke".
  */
@@ -66,26 +71,19 @@ public final class Scheduler {
         var sortedDays = days.stream().distinct().sorted().toList();
         var state = new State(sortedDays, participants);
 
-        var byScarcity =
-                sortedDays.stream()
-                        .sorted(
-                                Comparator.comparingInt((LocalDate d) -> state.count(d, Availability.CAN))
-                                        .thenComparing(Comparator.naturalOrder()))
-                        .toList();
-
-        for (var day : byScarcity) {
-            for (var slot = 0; slot < perDay; slot++) {
-                var pick = state.pick(day, Availability.CAN);
-                if (pick == null) {
-                    pick = state.pick(day, Availability.IF_NEEDED);
-                }
-                if (pick == null) {
-                    break;
-                }
-                state.assign(day, pick);
-            }
-        }
+        state.fill(byScarcity(sortedDays, state, Availability.CAN), perDay, Availability.CAN);
+        state.fill(byScarcity(sortedDays, state, Availability.IF_NEEDED), perDay, Availability.IF_NEEDED);
         return state.result();
+    }
+
+    /** Dagarna med färst som svarat {@code availability} först; lika avgörs av datumet. */
+    private static List<LocalDate> byScarcity(
+            List<LocalDate> days, State state, Availability availability) {
+        return days.stream()
+                .sorted(
+                        Comparator.comparingInt((LocalDate d) -> state.count(d, availability))
+                                .thenComparing(Comparator.naturalOrder()))
+                .toList();
     }
 
     /** Arbetsläget under en körning: vem som ligger var, och vad det kostar att lägga till. */
@@ -105,6 +103,19 @@ public final class Scheduler {
             }
             for (var p : participants) {
                 daysOf.put(p.name(), new ArrayList<>());
+            }
+        }
+
+        /** Fyller de platser som är lediga på varje dag med dem som svarat {@code availability}. */
+        void fill(List<LocalDate> days, int perDay, Availability availability) {
+            for (var day : days) {
+                while (assigned.get(day).size() < perDay) {
+                    var pick = pick(day, availability);
+                    if (pick == null) {
+                        break;
+                    }
+                    assign(day, pick);
+                }
             }
         }
 

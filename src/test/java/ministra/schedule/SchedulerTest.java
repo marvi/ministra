@@ -103,6 +103,23 @@ class SchedulerTest {
     }
 
     @Test
+    void yellow_days_are_filled_after_the_greens_have_been_placed() {
+        // 8 nov: ingen grön, Berit, Sanna och Frida gula. 15 nov: Berit ensam grön.
+        // Berit måste ta den 15:e, så den 8:e ska gå till en av de andra gula.
+        var days = sundays(2);
+        var people = List.of(
+                person("Berit", days, IF_NEEDED, CAN),
+                person("Sanna", days, IF_NEEDED, IF_NEEDED),
+                person("Frida", days, IF_NEEDED, CANNOT),
+                person("Sven", days, CANNOT, IF_NEEDED));
+
+        var plan = Scheduler.propose(days, people, 1);
+
+        assertThat(plan.get(days.get(1))).containsExactly("Berit");
+        assertThat(plan.get(days.get(0))).containsExactly("Sanna");
+    }
+
+    @Test
     void falls_back_to_yellow_when_greens_are_used_up() {
         // Två per dag, en grön och en gul: båda får plats, gul sist.
         var days = sundays(1);
