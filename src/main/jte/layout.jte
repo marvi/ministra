@@ -20,8 +20,8 @@
     ${content}
 </main>
 <footer class="footer">
-    <p>Ministra samlar in tillgänglighet inför söndagens gudstjänster.
-        Inga konton, inga lösenord. Förfrågningar raderas automatiskt.</p>
+    <p>Ministra samlar in tillgänglighet inför gudstjänster. Inga konton.
+        Förfrågningar raderas automatiskt.</p>
 </footer>
 </body>
 </html>

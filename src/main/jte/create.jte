@@ -9,11 +9,8 @@
 
 @template.layout(title = "Ny förfrågan", content = @`
     <h1>Ny förfrågan</h1>
-    <p class="lede">Välj perioden, ge den ett namn och skicka länken till dem som ska svara.
-        Du får själv fylla i direkt efteråt.</p>
-    <p class="lede">Nästa steg visar alla dagar kyrkoåret firar med gudstjänst i perioden —
-        inte bara söndagar, utan även jul, påsk och andra helgdagar. Där väljer du bort dem
-        ni inte behöver.</p>
+    <p class="lede">Välj period, ge förfrågan ett namn och skicka länken till dem som ska
+        svara.</p>
 
     <form method="post" action="/skapa">
         <div class="field">
@@ -70,9 +67,7 @@
         <h2>Om dig</h2>
         <div class="two-up">
             <div class="field">
-                <label class="field-label" for="creatorName">Ditt förnamn
-                    <span class="hint">Så att du kan fylla i din egen tillgänglighet.</span>
-                </label>
+                <label class="field-label" for="creatorName">Ditt förnamn</label>
                 <input type="text" id="creatorName" name="creatorName" maxlength="80" required
                        value="${form.creatorName() == null ? "" : form.creatorName()}">
                 @if(errors.containsKey("creatorName"))
@@ -81,7 +76,7 @@
             </div>
             <div class="field">
                 <label class="field-label" for="creatorEmail">Din e-postadress
-                    <span class="hint">Dit skickas länkarna. Din väg tillbaka.</span>
+                    <span class="hint">Länkarna skickas dit.</span>
                 </label>
                 <input type="email" id="creatorEmail" name="creatorEmail" maxlength="254" required
                        value="${form.creatorEmail() == null ? "" : form.creatorEmail()}">

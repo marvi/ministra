@@ -298,6 +298,10 @@ Efter att en förfrågan skapats visas **båda** länkarna på skärmen med kopi
 svarslänken som ska delas ut, och administrationslänken som är skaparens egen. Samma två
 länkar skickas dessutom i ett mejl till skaparens adress.
 
+> **Förtydligat 2026-09-09:** kopiera-knappen är förvalet. Själva adressen står inte
+> framme utan visas på begäran ("Visa länken"). Utan JavaScript står den framme, eftersom
+> knappen då inte kan fungera (D-003).
+
 Mejlet gör e-postadressen till det den utges för att vara — vägen tillbaka — och
 validerar adressen på köpet: kommer inget mejl fram är den felskriven.
 

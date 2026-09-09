@@ -55,8 +55,7 @@
     <%-- Egen form, utanför den ovan: ett formulär i ett annat är ogiltig HTML. De
          ikryssade dagarna följer med som dolda fält i stället. --%>
     <h2>Fira något mer?</h2>
-    <p class="meta">Har församlingen en dag som inte finns i kyrkoåret — ett lokalt helgon,
-        en egen högtid — lägger du till den här. Datumet måste ligga i perioden.</p>
+    <p class="meta">En egen högtid eller ett lokalt helgon som inte finns i kyrkoåret.</p>
     <%-- Med htmx byts bara det här området ut, så man står kvar i listan i stället för
          att kastas till sidans topp. Utan htmx postar formuläret som vanligt. --%>
     <form method="post" action="/skapa/dagar" class="add-day"

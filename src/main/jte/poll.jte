@@ -37,38 +37,52 @@
     @endif
 
     @if(admin)
+        <%-- Båda länkarna med kopiera-knapp (D-016). Själva adressen visas först på begäran;
+             utan skript står den framme, eftersom knappen då inte kan fungera. --%>
         <div class="admin-panel">
             <h2>Dina länkar</h2>
             <div class="link-row">
                 <strong>Skicka den här till dem som ska svara</strong>
-                <code>${responseUrl}</code>
-                <a class="button secondary" href="${mailto}">Skriv mejlet i din e-post</a>
+                <div class="actions">
+                    <button type="button" class="button secondary needs-js copy-link">Kopiera länken</button>
+                    <a class="button secondary" href="${mailto}">Skriv mejlet i din e-post</a>
+                    <button type="button" class="button secondary needs-js reveal-link"
+                            aria-expanded="false">Visa länken</button>
+                </div>
+                <code class="link-url">${responseUrl}</code>
+                <p class="meta copy-status" role="status"></p>
             </div>
             <div class="link-row">
                 <strong>Den här är din egen — spara den</strong>
-                <code>${adminUrl}</code>
-                <p class="meta">Med den ser du svaren och kan radera förfrågan.
-                    Båda länkarna har också mejlats till dig.</p>
+                <div class="actions">
+                    <button type="button" class="button secondary needs-js copy-link">Kopiera länken</button>
+                    <button type="button" class="button secondary needs-js reveal-link"
+                            aria-expanded="false">Visa länken</button>
+                </div>
+                <code class="link-url">${adminUrl}</code>
+                <p class="meta copy-status" role="status"></p>
+                <p class="meta">Båda länkarna är också mejlade till dig.</p>
             </div>
             <%-- Förslaget är ett hjälpmedel, avgörandet är skaparens, och inget sparas (D-046).
                  Knappen kommer först när det finns något att fördela. --%>
             <div class="link-row">
                 <strong>Förslag på schema</strong>
                 @if(canPropose)
-                    <p class="meta">Appen fördelar dem som svarat på dagarna. Du flyttar om som du
-                        vill och tar med dig resultatet som text. Inget sparas.</p>
-                    <a class="button" href="${adminBase}/schema">Ge förslag på schema</a>
+                    <div class="actions">
+                        <a class="button" href="${adminBase}/schema">Ge förslag på schema</a>
+                    </div>
                 @else
                     <p class="meta">Går att få när minst tre har svarat.</p>
                 @endif
             </div>
         </div>
+        <script src="/js/links.js" defer></script>
     @endif
 
     <form method="post" action="${submitPath}">
         <div class="field">
             <label class="field-label" for="name">Ditt förnamn
-                <span class="hint">Räcker med förnamn. Finns namnet redan får du lägga till en bokstav.</span>
+                <span class="hint">Är namnet upptaget, lägg till en bokstav.</span>
             </label>
             <input type="text" id="name" name="name" maxlength="80" required
                    autocomplete="given-name" value="${prefilledName}">
@@ -145,8 +159,6 @@
 
     @if(admin)
         <h2>Radera förfrågan</h2>
-        <p class="meta">Raderas automatiskt efter
-            ${Dates.format(view.poll().getValidUntil())}. Du kan också göra det nu.</p>
         <div class="actions">
             <button type="button" class="button danger" id="delete-start">Radera förfrågan</button>
         </div>

@@ -35,7 +35,7 @@
 
         <section class="tray" aria-labelledby="tray-heading">
             <h2 id="tray-heading">Personer</h2>
-            <p class="meta">Siffran är hur många dagar var och en har just nu.</p>
+            <p class="meta">Siffran är antal dagar.</p>
             <ul class="tiles" id="tray">
                 @for(ScheduleView.Person person : view.people())
                     <li class="tile source"

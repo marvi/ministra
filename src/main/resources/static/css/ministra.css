@@ -159,7 +159,8 @@ a:focus-visible {
     outline-offset: 2px;
 }
 
-.two-up { display: grid; gap: 1rem; }
+/* Fälten bottnar lika även när bara det ena har en hjälptext. */
+.two-up { display: grid; gap: 1rem; align-items: end; }
 @media (min-width: 30rem) { .two-up { grid-template-columns: 1fr 1fr; } }
 
 .error {
@@ -288,8 +289,10 @@ button, .button {
     margin: 0 0 1.5rem;
 }
 
-.link-row { margin: 0 0 1rem; }
+.link-row { margin: 0 0 1.2rem; }
 .link-row:last-of-type { margin-bottom: 0; }
+.link-row .actions { margin-top: .4rem; }
+.link-row .copy-status:empty { display: none; }
 
 .link-row code {
     display: block;
