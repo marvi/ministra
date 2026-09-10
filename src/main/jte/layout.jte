@@ -12,16 +12,22 @@
     <%-- Självhostad, inga externa resurser (AGENTS.md). --%>
     <script src="/js/htmx-2.0.4.min.js" defer></script>
 </head>
-<body>
+<%-- Bredden sitter på body, inte på main: annars vidgas innehållet på arbetsbladet
+     medan topplisten står kvar och sidan får två vänsterkanter (D-048). --%>
+<body class="${wide ? "wide" : ""}">
 <header class="topbar">
-    <a class="wordmark" href="/">Ministra</a>
+    <div class="wrap">
+        <a class="wordmark" href="/">Ministra</a>
+    </div>
 </header>
-<main class="${wide ? "wide" : ""}">
+<main class="wrap">
     ${content}
 </main>
 <footer class="footer">
-    <p>Ministra samlar in tillgänglighet inför gudstjänster. Inga konton.
-        Förfrågningar raderas automatiskt.</p>
+    <div class="wrap">
+        <p>Ministra samlar in tillgänglighet inför gudstjänster. Inga konton.
+            Förfrågningar raderas automatiskt.</p>
+    </div>
 </footer>
 </body>
 </html>

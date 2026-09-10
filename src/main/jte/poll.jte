@@ -85,11 +85,11 @@
 
     <form method="post" action="${submitPath}">
         <div class="field">
-            <label class="field-label" for="name">Ditt förnamn
-                <span class="hint">Är namnet upptaget, lägg till en bokstav.</span>
-            </label>
+            <label class="field-label" for="name">Ditt förnamn</label>
+            <span class="hint" id="name-hint">Är namnet upptaget, lägg till en bokstav.</span>
             <input type="text" id="name" name="name" maxlength="80" required
-                   autocomplete="given-name" value="${prefilledName}">
+                   autocomplete="given-name" aria-describedby="name-hint"
+                   value="${prefilledName}">
         </div>
 
         <%-- Ordalydelsen är beslutad i D-013 och står alltid framme, aldrig i en hover.
@@ -154,10 +154,12 @@
             @endfor
         </fieldset>
 
-        <%-- Rätt varning i rätt ögonblick (D-010). --%>
-        <p class="meta" style="margin-top:1.2rem">Svar kan inte ändras i efterhand.</p>
-        <div class="actions primary">
-            <button type="submit">Spara mitt svar</button>
+        <%-- Rätt varning i rätt ögonblick (D-010): sista raden innan knappen. --%>
+        <div class="form-end">
+            <p class="meta">Svar kan inte ändras i efterhand.</p>
+            <div class="actions primary">
+                <button type="submit">Spara mitt svar</button>
+            </div>
         </div>
     </form>
 

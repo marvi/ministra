@@ -47,8 +47,11 @@
             @endfor
         </ul>
 
-        <div class="actions">
-            <button type="submit">Spara förfrågan</button>
+        <div class="form-end">
+            <div class="actions">
+                <button type="submit">Spara förfrågan</button>
+            </div>
+            <p class="meta">Då skapas förfrågan och du får länkarna på mejlen.</p>
         </div>
     </form>
 

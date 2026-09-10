@@ -1089,3 +1089,54 @@ Avvisat:
   compose-filen läses av människa, IDE och `podman compose` lika.
 - **`down` i stället för `stop` vid avslut.** Datat ska ligga kvar mellan körningar, så
   att en halvfärdig förfrågan inte försvinner vid varje omstart.
+
+## D-048 — Det visuella systemet: en spalt, två skalor, en kontrollstil
+
+Utseendet vilar på ett litet system i `ministra.css` i stället för på handplockade mått
+per vy. Fyra saker är beslutade och ska inte förhandlas fält för fält.
+
+**En spalt.** Bredden ligger i `--col` och delas av topplist, innehåll och fot genom
+klassen `.wrap`. Sidan har därmed en enda vänsterkant. Arbetsbladet ([D-046](#d-046--ett-förslag-på-schema-som-hjälpmedel))
+vidgar spalten till 72rem, och gör det på `body` — sätts klassen på `main` följer inte
+listen med och kanterna glider isär igen. Formulärspalten är 36rem: en radlängd som går
+att läsa, inte den bredd fönstret råkar ha.
+
+**Två skalor.** Avstånd väljs ur `--s1`…`--s7` och grader ur `--text-xs`…`--text-2xl`,
+med brödtexten på 1rem. Rytmen blir jämn för att den är byggd så, inte för att någon
+räknat pixlar. Ett mått utanför skalorna är ett fel om det inte är kommenterat.
+
+**Tre ytor och två linjer.** `--paper` är sidan, `--bar` topplisten, `--card` allt man kan
+röra vid. `--rule` avdelar avsnitt, `--line` ramar in en kontroll och är mörkare med
+flit: tidigare skilde sig fältets yta två procent från sidans, och då ser fälten inte ut
+att gå att skriva i. Accent och trafikljus är oförändrade — trafikljuset äger grönt, gult
+och rött ([D-013](#d-013--de-tre-valen-förklaras-med-synlig-text), [D-044](#d-044--svarsvyns-utformning)).
+
+**En kontrollstil.** `input`, `textarea` och `select` har samma höjd, ram, radie och
+padding. `select` sätts till `appearance: none` med en egen pil ritad som SVG i CSS,
+eftersom Safari annars ritar den som en systemkontroll och struntar i både höjd och
+padding — kontrollerna blev olika höga utan att någon skrivit att de skulle vara det.
+Träffytan är minst 44 px som förut ([D-008](#d-008--användarvänlig-före-minimal)).
+
+Två följdregler i mallarna:
+
+- **Hjälptexten är syskon till etiketten**, inte innesluten i den, och knyts till fältet
+  med `aria-describedby`. Två fält i bredd (`.two-up`) radar då upp etiketter, hjälptexter
+  och kontroller på samma linjer med `subgrid`, även när bara det ena fältet har en
+  hjälptext. Utan `subgrid` faller det tillbaka till två fält som börjar upptill.
+- **Ett formulär slutar med `.form-end`**: en hårlinje, knappen, och en rad som säger vad
+  som händer när man trycker. Det är där tvåstegsskapandet ([D-042](#d-042--dagarna-väljs-innan-förfrågan-skapas))
+  och att svar inte kan ändras ([D-010](#d-010--svar-är-oföränderliga-och-alla-ser-alla))
+  står framme.
+
+Avvisat:
+
+- **Ett CSS-ramverk.** Fortfarande handskriven CSS utan npm ([D-003](#d-003--server-renderad-html-med-jte-och-htmx)).
+  Systemet är trettio rader anpassade variabler, inte ett beroende.
+- **Kort runt varje avsnitt.** Prövat som alternativ: tydligast gruppering av de tre, men
+  gör appen till en "app" i stället för ett papper, och trettio inramade dagar i daglistan
+  blev tungt redan i [D-044](#d-044--svarsvyns-utformning).
+- **Registerlayout med etiketten i egen vänsterkolumn** och en hemtagen serif. Mest eget
+  ansikte, men kräver en fontfamilj i avbilden och att daglistan byggs om i samma form.
+  Kan tas upp igen; det är en större ändring än en förfining.
+- **`@layer`.** Skulle låta `!important` på `.needs-js` försvinna, men ändrar hur hela
+  filen kaskaderar. Inte värt det i samma ändring som utseendet byts.

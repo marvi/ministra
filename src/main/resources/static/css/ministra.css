@@ -4,6 +4,10 @@
  * Handskriven, inget ramverk och inget npm (D-003). Mobilen först: layouten är en
  * enspaltig kolumn hela vägen upp, och ingenting kräver hover (D-008).
  *
+ * Det visuella systemet — spaltbredden, skalorna, färgrollerna och den enda
+ * kontrollstilen — är beslutat i D-048. Nästan varje mått här nere är hämtat ur en
+ * skala; läs posten innan du skriver en egen siffra.
+ *
  * Utformningen av daglistan är beslutad i D-044: platt lista med hårlinjer, veckodag och
  * fullt datum som rubrikrad, kyrkoårsnamnet som den feta raden, och trafikljusknappar som
  * är tonade redan i vila så att instruktionstextens "grön", "gul" och "röd" pekar på
@@ -11,17 +15,29 @@
  */
 
 :root {
-    /* Varmt papper och bläck, inte grått på vitt. */
-    --paper: #faf7f2;
-    --card: #fffdfa;
-    --ink: #22303c;
-    --ink-soft: #5c6b78;
-    --rule: #e2dbd0;
+    /* ---- Färg ---- */
+
+    /* Varmt papper och bläck, inte grått på vitt. De tre ytorna skiljer sig så mycket
+       att man ser vilken som är vilken: sidan är papper, listen en ton ljusare, och
+       allt man kan röra vid är nästan vitt. */
+    --paper: #f5f1e9;
+    --bar: #fbf8f2;
+    --card: #fffefc;
+
+    --ink: #1f2933;
+    --ink-soft: #5d6b78;
+
+    /* Två linjer med olika uppgift: en avdelare mellan avsnitt, och en ram runt en
+       kontroll. Ramen är mörkare med flit — annars ser fälten inte ut att gå att
+       skriva i. */
+    --rule: #ddd6c9;
+    --line: #c9beab;
 
     /* Accenten är indigo med flit. Trafikljuset äger grönt, gult och rött; ingenting
        annat på sidan får tala det språket (D-044). */
     --accent: #4a3f7a;
     --accent-soft: #ece9f6;
+    --on-accent: #ffffff;
 
     /* Trafikljus. Färgen är alltid en förstärkning, aldrig ensam bärare (D-013). */
     --can: #2f6f4f;
@@ -33,19 +49,47 @@
     /* Text ovanpå en mörk, vald knapp. */
     --on-fill: #ffffff;
 
-    --radius: 10px;
+    /* ---- Mått ---- */
+
+    /* Spalten. Topplist, innehåll och fot delar den, så sidan har en enda vänsterkant
+       (D-048). Arbetsbladet vidgar den på body, inte på main, just för att listen ska
+       följa med. */
+    --col: 36rem;
+
+    /* Avståndsskala. Väljer du något som inte står här har du hittat på ett mått. */
+    --s1: .25rem;
+    --s2: .5rem;
+    --s3: .75rem;
+    --s4: 1rem;
+    --s5: 1.5rem;
+    --s6: 2rem;
+    --s7: 3rem;
+
+    /* Typskala, steg om ungefär 1,2. Brödtexten är 1rem och står inte med. */
+    --text-xs: .8rem;
+    --text-sm: .9rem;
+    --text-lg: 1.15rem;
+    --text-xl: 1.35rem;
+    --text-2xl: 1.75rem;
+
+    --radius: 8px;
     --tap: 44px;
+
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --paper: #16191d;
-        --card: #1e2228;
+        --paper: #15181c;
+        --bar: #1a1e23;
+        --card: #21262d;
         --ink: #e6e3dd;
-        --ink-soft: #9aa5b1;
+        --ink-soft: #99a4b0;
         --rule: #333a43;
+        --line: #4a545f;
         --accent: #b3a7e8;
-        --accent-soft: #272338;
+        --accent-soft: #262238;
+        --on-accent: #16191d;
 
         /* I mörkt läge är fyllningarna ljusa, så texten ovanpå dem måste vara mörk. */
         --can: #7fc79f;
@@ -68,70 +112,99 @@ body {
     -webkit-text-size-adjust: 100%;
 }
 
+/* Arbetsbladet får vara bredare än formulären: rutnätet blir två till fyra kolumner på
+   skärm och en på mobil. Sidan är fortfarande läsbar på mobil, bara trängre. */
+body.wide { --col: 72rem; }
+
 h1, h2 {
     /* En serif i rubrikerna ger appen ett eget ansikte utan att hämta hem en font. */
-    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+    font-family: var(--serif);
     font-weight: 600;
+    text-wrap: balance;
 }
 
-h1 { font-size: 1.6rem; line-height: 1.25; margin: 0 0 .4rem; }
-h2 { font-size: 1.15rem; margin: 2rem 0 .6rem; }
+h1 { font-size: var(--text-2xl); line-height: 1.2; margin: 0 0 var(--s2); }
 
-main {
-    max-width: 40rem;
-    margin: 0 auto;
-    padding: 1rem 1rem 4rem;
+/* Ett nytt avsnitt börjar på en hårlinje, inte i ett hål. Skillnaden mot en fältetikett
+   ska synas på en halv sekund; därför både serifen, storleken och linjen. */
+h2 {
+    font-size: var(--text-xl);
+    margin: var(--s6) 0 var(--s3);
+    padding-top: var(--s5);
+    border-top: 1px solid var(--rule);
 }
+
+/* ---------- Spalten ---------- */
+
+/* Allt som ska ligga på sidans vänsterkant bär den här klassen: listen, innehållet och
+   foten. Bredden kommer från --col, som body kan vidga. */
+.wrap {
+    max-width: var(--col);
+    margin-inline: auto;
+    padding-inline: var(--s4);
+}
+
+main { display: block; padding-block: var(--s6) var(--s7); }
 
 /* ---------- Topp och fot ---------- */
 
 .topbar {
     border-bottom: 1px solid var(--rule);
-    background: var(--card);
+    background: var(--bar);
 }
 
 .wordmark {
     display: inline-block;
-    padding: .9rem 1rem;
-    font-family: Georgia, "Iowan Old Style", Palatino, serif;
-    font-size: 1.1rem;
+    padding-block: var(--s3);
+    font-family: var(--serif);
+    font-size: var(--text-lg);
     letter-spacing: .02em;
     color: var(--accent);
     text-decoration: none;
 }
 
+/* Foten speglar topplisten: linjen går över hela bredden, texten står i spalten. */
 .footer {
-    max-width: 40rem;
-    margin: 0 auto;
-    padding: 0 1rem 3rem;
+    padding-block: var(--s5) var(--s7);
+    border-top: 1px solid var(--rule);
     color: var(--ink-soft);
-    font-size: .85rem;
+    font-size: var(--text-xs);
 }
+
+.footer p { margin: 0; }
 
 /* ---------- Text ---------- */
 
-.lede { color: var(--ink-soft); margin: 0 0 1rem; }
-.meta { color: var(--ink-soft); font-size: .9rem; margin: 0 0 .4rem; }
+.lede { color: var(--ink-soft); margin: 0 0 var(--s4); }
+.meta { color: var(--ink-soft); font-size: var(--text-sm); margin: 0 0 var(--s1); }
 
 /* Den här texten är beslutad ordagrant i D-013 och står alltid framme. */
 .instructions {
+    background: var(--accent-soft);
     border-left: 3px solid var(--accent);
-    padding: .1rem 0 .1rem 1rem;
-    margin: 1.5rem 0;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: var(--s3) var(--s4);
+    margin: var(--s5) 0;
 }
 
 /* ---------- Formulärfält ---------- */
 
-.field { margin: 0 0 1.2rem; }
+/* Etikett, hjälptext, kontroll och felmeddelande ligger som syskon i ett rutnät. Det
+   är vad som gör att två fält bredvid varandra kan radas upp på samma linjer även när
+   bara det ena har en hjälptext. */
+.field {
+    display: grid;
+    gap: var(--s1);
+    margin: 0 0 var(--s5);
+}
 
 label.field-label,
 legend.field-label {
     display: block;
     font-weight: 600;
-    margin-bottom: .3rem;
 }
 
-.hint { display: block; font-weight: 400; color: var(--ink-soft); font-size: .9rem; }
+.hint { display: block; font-weight: 400; color: var(--ink-soft); font-size: var(--text-sm); }
 
 input[type=text],
 input[type=email],
@@ -140,15 +213,39 @@ textarea,
 select {
     width: 100%;
     min-height: var(--tap);
-    padding: .6rem .7rem;
+    padding: var(--s3) var(--s3);
     font: inherit;
     color: var(--ink);
     background: var(--card);
-    border: 1px solid var(--rule);
+    border: 1px solid var(--line);
     border-radius: var(--radius);
 }
 
-textarea { min-height: 5rem; resize: vertical; }
+/* Safari ritar en select som en systemkontroll och struntar i både höjd och padding,
+   så kontrollen blir lägre än fälten omkring den. Vi ritar pilen själva i stället. */
+input[type=text],
+input[type=email],
+textarea,
+select {
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+select {
+    padding-right: var(--s6);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%235d6b78' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--s3) center;
+    background-size: .7rem;
+}
+
+@media (prefers-color-scheme: dark) {
+    select {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%2399a4b0' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+}
+
+textarea { min-height: 6rem; line-height: 1.5; resize: vertical; }
 
 input:focus-visible,
 select:focus-visible,
@@ -159,28 +256,48 @@ a:focus-visible {
     outline-offset: 2px;
 }
 
-/* Fälten bottnar lika även när bara det ena har en hjälptext. */
-.two-up { display: grid; gap: 1rem; align-items: end; }
-@media (min-width: 30rem) { .two-up { grid-template-columns: 1fr 1fr; } }
+/* Två fält i bredd. Med subgrid ärver fälten radernas linjer från raden ovanför, så
+   etiketterna står i linje, kontrollerna står i linje och ett fält utan hjälptext
+   lämnar bara sin rad tom. Utan subgrid faller det tillbaka till två fält i bredd som
+   börjar upptill — fortfarande läsbart. */
+.two-up { display: grid; gap: var(--s4); }
+
+@media (min-width: 30rem) {
+    /* Fälten lämnar sin egen bottenmarginal till subgriden, så raden bär den i stället. */
+    .two-up { grid-template-columns: 1fr 1fr; margin-bottom: var(--s5); }
+
+    .two-up > .field {
+        grid-row: span 4;
+        grid-template-rows: subgrid;
+        margin-bottom: 0;
+    }
+
+    .two-up > .field > .field-label { grid-row: 1; }
+    .two-up > .field > .hint { grid-row: 2; }
+    .two-up > .field > input,
+    .two-up > .field > select,
+    .two-up > .field > textarea { grid-row: 3; }
+    .two-up > .field > .field-error { grid-row: 4; }
+}
 
 .error {
     background: var(--cannot-bg);
     color: var(--cannot);
     border-radius: var(--radius);
-    padding: .7rem .9rem;
-    margin: 0 0 1rem;
+    padding: var(--s3) var(--s4);
+    margin: 0 0 var(--s4);
     font-weight: 600;
 }
 
-.field-error { color: var(--cannot); font-size: .9rem; margin: .3rem 0 0; }
+.field-error { color: var(--cannot); font-size: var(--text-sm); margin: 0; }
 
 /* Bekräftelsen efter ett sparat svar. Accenten, inte trafikljusets gröna (D-044). */
 .notice {
     background: var(--accent-soft);
     color: var(--accent);
     border-radius: var(--radius);
-    padding: .7rem .9rem;
-    margin: 0 0 1rem;
+    padding: var(--s3) var(--s4);
+    margin: 0 0 var(--s4);
     font-weight: 600;
 }
 
@@ -190,12 +307,12 @@ button, .button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: .4rem;
+    gap: var(--s1);
     min-height: var(--tap);
-    padding: .6rem 1.2rem;
+    padding: var(--s3) var(--s5);
     font: inherit;
     font-weight: 600;
-    color: var(--card);
+    color: var(--on-accent);
     background: var(--accent);
     border: 1px solid transparent;
     border-radius: var(--radius);
@@ -206,14 +323,29 @@ button, .button {
 .button.secondary {
     color: var(--accent);
     background: var(--card);
-    border-color: var(--rule);
+    border-color: var(--line);
 }
 
 .button.danger { color: var(--cannot); background: var(--cannot-bg); border-color: var(--cannot); }
 
-.actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1rem; }
+.actions { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s4); }
+
+/* Slutet på ett formulär. Linjen säger att fälten är slut, och raden under knappen
+   säger vad som händer när man trycker. */
+.form-end {
+    display: grid;
+    justify-items: start;
+    gap: var(--s3);
+    margin-top: var(--s6);
+    padding-top: var(--s5);
+    border-top: 1px solid var(--rule);
+}
+
+.form-end .actions { margin-top: 0; }
+.form-end .meta { margin: 0; }
 
 /* Knappen som sparar svaret får hela bredden; den är det enda man ska göra där. */
+.actions.primary { justify-self: stretch; }
 .actions.primary button { flex: 1 1 100%; }
 
 /* ---------- Daglistan ---------- */
@@ -228,6 +360,10 @@ button, .button {
     border: 0;
     border-bottom: 1px solid var(--rule);
 }
+
+/* Sista dagen följs av .form-end, som har sin egen linje. Två linjer intill varandra
+   ser ut som ett fel. */
+.day:last-child { border-bottom: 0; }
 
 .day legend { padding: 0; }
 
@@ -290,6 +426,9 @@ button, .button {
 .answers .cannot .mark, .answers .cannot .word { color: var(--cannot); }
 
 /* ---------- Admin ---------- */
+
+/* Panelens rubrik är inte ett nytt avsnitt på sidan; den hör till kortet. */
+.admin-panel h2 { margin-top: 0; padding-top: 0; border-top: 0; }
 
 .admin-panel {
     background: var(--card);
@@ -398,10 +537,6 @@ button, .button {
 
 /* ---------- Förslag på schema (D-046) ---------- */
 
-/* Arbetsbladet får vara bredare än formulären: rutnätet blir två till fyra kolumner på
-   skärm och en på mobil. Sidan är fortfarande läsbar på mobil, bara trängre. */
-main.wide { max-width: 72rem; }
-
 /* Sådant som bara fungerar med skript göms utan (D-003). Skriptet sätter klassen js på
    html-elementet. !important för att vinna över elementens egna display-regler. */
 html:not(.js) .needs-js { display: none !important; }
@@ -430,7 +565,7 @@ html:not(.js) .needs-js { display: none !important; }
     margin: 1rem 0 1.5rem;
 }
 .per-day label { margin: 0; }
-.per-day select { width: auto; min-width: 5rem; }
+.per-day select { width: auto; min-width: 6rem; }
 
 .undo {
     display: flex;
@@ -445,7 +580,7 @@ html:not(.js) .needs-js { display: none !important; }
 
 /* Brickraden är källan: en bricka per person, aldrig färre. Siffran är antalet dagar. */
 .tray { margin: 0 0 1.5rem; }
-.tray h2 { margin-top: 1rem; }
+.tray h2 { margin-top: var(--s5); }
 
 .tiles {
     display: flex;
@@ -551,7 +686,8 @@ html:not(.js) .needs-js { display: none !important; }
 @media print {
     .topbar, .footer, .per-day, .undo, .tray, .actions, .lede, .only-narrow,
     .tile-remove, #copied { display: none !important; }
-    main, main.wide { max-width: none; padding: 0; }
+    .wrap { max-width: none; padding: 0; }
+    main { padding: 0; }
     body { background: #fff; color: #000; font-size: 11pt; }
     .schedule-grid { display: block; }
     .schedule-day {
