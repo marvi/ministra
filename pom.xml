@@ -10,7 +10,7 @@
     </parent>
     <groupId>io.marvi</groupId>
     <artifactId>ministra</artifactId>
-    <version>1.1.4-SNAPSHOT</version>
+    <version>1.1.4</version>
     <name>ministra</name>
     <description>Samlar in tillgänglighet från frivilliga inför kyrkoårets gudstjänster</description>
     <scm>
