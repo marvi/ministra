@@ -348,6 +348,10 @@ button, .button {
 .actions.primary { justify-self: stretch; }
 .actions.primary button { flex: 1 1 100%; }
 
+/* Svarsvyns formulär följer direkt på sidhuvudets metarader, eller på tack- och
+   felrutan. Utan luft här står "Raderas efter …" tätt mot etiketten "Ditt förnamn". */
+.meta + form, .notice + form, .error + form { margin-top: var(--s5); }
+
 /* ---------- Daglistan ---------- */
 
 /* Platt lista med hårlinjer. Trettio inramade kort på en mobil blir tungt; avdelare
@@ -356,7 +360,7 @@ button, .button {
 
 .day {
     margin: 0;
-    padding: 1.1rem 0 1.2rem;
+    padding: var(--s4) 0 var(--s5);
     border: 0;
     border-bottom: 1px solid var(--rule);
 }
@@ -369,15 +373,15 @@ button, .button {
 
 /* Veckodag och fullt datum som rubrikrad, kyrkoårsnamnet som den feta raden. En dag
    utan namn bär sig själv på datumraden. */
-.day-date { display: block; font-size: .9rem; color: var(--ink-soft); }
-.day-name { display: block; font-size: 1.05rem; font-weight: 700; margin-top: .1rem; }
+.day-date { display: block; font-size: var(--text-sm); color: var(--ink-soft); }
+.day-name { display: block; font-weight: 700; }
 
 /* Tre lika breda val. Varje träffyta är minst 44 px hög. */
 .choices {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: .5rem;
-    margin-top: .8rem;
+    gap: var(--s2);
+    margin-top: var(--s3);
 }
 
 .choices input { position: absolute; opacity: 0; pointer-events: none; }
@@ -386,12 +390,12 @@ button, .button {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: .3rem;
+    gap: var(--s1);
     min-height: var(--tap);
-    padding: .5rem .3rem;
+    padding: var(--s2) var(--s1);
     border: 1px solid transparent;
     border-radius: var(--radius);
-    font-size: .9rem;
+    font-size: var(--text-sm);
     font-weight: 600;
     line-height: 1.2;
     text-align: center;
@@ -417,10 +421,10 @@ button, .button {
 
 /* Grupperat per svar, inte per person: med tio textläsare och trettio dagar blir
    per-person trehundra rader. Högst tre rader per dag skalar. */
-.answers { margin: .7rem 0 0; font-size: .9rem; color: var(--ink-soft); }
-.answers p { margin: .2rem 0; }
+.answers { margin: var(--s3) 0 0; font-size: var(--text-sm); color: var(--ink-soft); }
+.answers p { margin: var(--s1) 0; }
 .answers .mark { font-weight: 700; }
-.answers .word { font-weight: 600; margin-right: .3rem; }
+.answers .word { font-weight: 600; margin-right: var(--s1); }
 .answers .can .mark,    .answers .can .word    { color: var(--can); }
 .answers .maybe .mark,  .answers .maybe .word  { color: var(--maybe); }
 .answers .cannot .mark, .answers .cannot .word { color: var(--cannot); }
