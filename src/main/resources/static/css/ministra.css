@@ -348,9 +348,11 @@ button, .button {
 .actions.primary { justify-self: stretch; }
 .actions.primary button { flex: 1 1 100%; }
 
-/* Svarsvyns formulär följer direkt på sidhuvudets metarader, eller på tack- och
-   felrutan. Utan luft här står "Raderas efter …" tätt mot etiketten "Ditt förnamn". */
-.meta + form, .notice + form, .error + form { margin-top: var(--s5); }
+/* Svarsvyns formulär, eller admin-panelen, följer direkt på sidhuvudets metarader
+   eller på tack- och felrutan. Utan luft här står "Raderas efter …" tätt mot det som
+   kommer efter. */
+.meta + form, .notice + form, .error + form,
+.meta + .admin-panel, .notice + .admin-panel, .error + .admin-panel { margin-top: var(--s5); }
 
 /* ---------- Daglistan ---------- */
 
@@ -438,13 +440,13 @@ button, .button {
     background: var(--card);
     border: 1px solid var(--rule);
     border-radius: var(--radius);
-    padding: 1rem;
-    margin: 0 0 1.5rem;
+    padding: var(--s4);
+    margin: 0 0 var(--s5);
 }
 
-.link-row { margin: 0 0 1.2rem; }
+.link-row { margin: 0 0 var(--s5); }
 .link-row:last-of-type { margin-bottom: 0; }
-.link-row .actions { margin-top: .4rem; }
+.link-row .actions { margin-top: var(--s2); }
 .link-row .copy-status:empty { display: none; }
 
 .link-row code {
@@ -453,13 +455,13 @@ button, .button {
     background: var(--paper);
     border: 1px solid var(--rule);
     border-radius: var(--radius);
-    padding: .5rem .6rem;
-    margin: .3rem 0;
-    font-size: .85rem;
+    padding: var(--s2) var(--s3);
+    margin: var(--s1) 0;
+    font-size: var(--text-xs);
 }
 
 /* Bekräftelsen ligger i sidan, inte i webbläsarens confirm() (D-026). */
-.confirm { margin-top: 1rem; }
+.confirm { margin-top: var(--s4); }
 .confirm[hidden] { display: none; }
 
 /* ---------- Välja dagar innan förfrågan skapas ---------- */
