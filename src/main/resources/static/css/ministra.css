@@ -466,7 +466,7 @@ button, .button {
 
 /* ---------- Välja dagar innan förfrågan skapas ---------- */
 
-.day-picks { list-style: none; margin: 0 0 1.5rem; padding: 0; }
+.day-picks { list-style: none; margin: 0 0 var(--s5); padding: 0; }
 
 .day-picks li { margin-bottom: var(--s2); }
 
