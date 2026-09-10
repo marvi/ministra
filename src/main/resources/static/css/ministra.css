@@ -466,7 +466,7 @@ button, .button {
 
 .day-picks { list-style: none; margin: 0 0 1.5rem; padding: 0; }
 
-.day-picks li { margin-bottom: .4rem; }
+.day-picks li { margin-bottom: var(--s2); }
 
 /* Kryssrutan bär tillståndet för hjälpmedel; hela raden är etiketten man trycker på. */
 .day-picks input { position: absolute; opacity: 0; pointer-events: none; }
@@ -475,9 +475,9 @@ button, .button {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: .8rem;
+    gap: var(--s3);
     min-height: var(--tap);
-    padding: .6rem .5rem .6rem .9rem;
+    padding: var(--s3) var(--s2) var(--s3) var(--s4);
     background: var(--card);
     border: 1px solid var(--rule);
     border-radius: var(--radius);
@@ -487,8 +487,8 @@ button, .button {
 .day-picks input:focus-visible + label { outline: 3px solid var(--accent); outline-offset: 2px; }
 
 /* Samma hierarki som i svarsvyn: datum över, namn under. */
-.pick-text { display: flex; flex-direction: column; gap: .05rem; min-width: 0; }
-.pick-date { font-size: .85rem; color: var(--ink-soft); }
+.pick-text { display: flex; flex-direction: column; min-width: 0; }
+.pick-date { font-size: var(--text-sm); color: var(--ink-soft); }
 .pick-name { font-weight: 700; }
 
 /* Knappen till höger säger vad ett klick gör — inte vilket tillstånd raden har. Att den
@@ -497,16 +497,17 @@ button, .button {
     display: inline-flex;
     align-items: center;
     flex: none;
+    /* Lägre än en riktig knapp med flit: den sitter inuti en rad som redan är en träffyta. */
     min-height: 36px;
-    padding: .25rem .7rem;
-    border: 1px solid var(--rule);
+    padding: var(--s1) var(--s3);
+    border: 1px solid var(--line);
     border-radius: var(--radius);
-    font-size: .85rem;
+    font-size: var(--text-sm);
     font-weight: 600;
     white-space: nowrap;
 }
 
-.pick-icon { font-size: 1rem; line-height: 1; margin-right: .35rem; }
+.pick-icon { font-size: 1rem; line-height: 1; margin-right: var(--s1); }
 
 /* Med i listan: dämpad knapp som erbjuder att ta bort. */
 .pick-add { display: none; }
@@ -533,9 +534,9 @@ button, .button {
 
 /* ---------- Lägga till ett eget datum ---------- */
 
-.add-day { margin-bottom: 2rem; }
+.add-day { margin-bottom: var(--s6); }
 
-.add-day-row { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+.add-day-row { display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center; }
 .add-day-row input[type=date] { flex: 1 1 12rem; width: auto; }
 .add-day-row button { flex: none; }
 
