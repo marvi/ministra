@@ -8,12 +8,7 @@ arkitekturändringar** — flera saker som ser konstiga ut är medvetna val.
 ## Kommandon
 
 ```bash
-# Databas för lokal utveckling
-podman run --rm -d --name ministra-db -p 5433:5432 \
-  -e POSTGRES_DB=ministra -e POSTGRES_USER=ministra -e POSTGRES_PASSWORD=ministra \
-  docker.io/library/postgres:18
-
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev   # http://localhost:8080
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev   # http://localhost:8080, startar databasen ur compose.yaml
 ./mvnw test                                             # alla tester
 ./mvnw test -Dtest=KlassNamn#metodNamn                  # ett enskilt test
 ./mvnw verify                                           # måste vara grön innan "klart"
@@ -22,9 +17,17 @@ podman run --rm -d --name ministra-db -p 5433:5432 \
 
 Java 25 styrs av `mise.toml`. Använd alltid `./mvnw`, aldrig ett globalt `mvn`.
 
+Pinna inte versioner som Boots BOM redan hanterar (Testcontainers, commons-compress och
+liknande). En egen pinning kopplar loss beroendet från den kurerade uppsättningen och har
+dragit in sårbara transitiva versioner förut. Ett versionsöverdrag är ett medvetet beslut
+med ett skäl i decisions.md.
+
 Utan `-Dspring-boot.run.profiles=dev` startar appen med produktionsinställningar och
-saknar databasadress. Porten är 5433 med flit — 5432 är ofta upptagen av en annan
-Postgres, och då kopplar appen tyst upp sig mot fel databas.
+saknar databasadress. Databasen i `compose.yaml` startas och stoppas av Spring Boot i
+dev-profilen ([D-047](docs/decisions.md)); med Podman krävs Dockers klient mot
+podman-socketen, se README. Porten är 5433 med flit — 5432 är ofta upptagen av en annan
+Postgres, och då kopplar appen tyst upp sig mot fel databas. Compose-filen är bara för
+utveckling; testerna kör Testcontainers och compose-stödet hoppar över dem av sig självt.
 
 ## Stack
 
@@ -274,11 +277,16 @@ Lägg inte till fler jobb utan att fråga.
   normalfallet. Det som verkligen kan vara null säger det med `@Nullable` — entiteters
   `id` före persistering, `ServiceDay.name`, `Poll.comment`, valfria request-parametrar.
   Sätt aldrig `@Nullable` för att tysta en varning; sätt den för att det är sant.
-- **Lita inte blint på IDE:ns inspektioner på JPA-entiteter.** "Field can be final",
-  "field can be local variable" och "collection updated but never queried" är fel där:
-  Hibernate läser och skriver fälten via reflektion, och `final` bryter proxying.
-  Detsamma gäller "cannot resolve MVC view" (IDE:n känner inte jte) och "no beans of
-  JavaMailSender" (autokonfigurerad, villkorad på `spring.mail.host`). Se FRAGOR.md.
+- **Lita inte blint på IDE:ns inspektioner på JPA-entiteter och Spring-handlers.**
+  Verktyget ser Java; det ser inte reflektionen under. Fel, och ska inte "rättas":
+  "field may be final" (Hibernate sätter fält via reflektion och proxar entiteter);
+  "field can be local variable" på `createdAt`, `nameKey`, `submittedAt`, `notifiedAt`
+  (de är kolumner som JPQL läser, och `Poll.createdAt` är en revisionskolumn för `psql`);
+  "collection updated but never queried" på `Poll.participants` (finns för kaskaden);
+  "method always returns the same value" på handlers som returnerar vynamn; "cannot
+  resolve MVC view" (IDE:n känner inte jte); "could not autowire JavaMailSender"
+  (autokonfigurerad, villkorad på `spring.mail.host` — saknas hosten i produktion faller
+  appen vid start, vilket är rätt).
 - `MinistraApplication.main` är avsiktligt package-private instansstil (Java 25) — behåll.
 - Paketstruktur efter funktion, inte lager: `ministra.poll`, `ministra.calendar`,
   `ministra.mail` — inte `controller`, `service`, `repository`.

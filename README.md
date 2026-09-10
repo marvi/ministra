@@ -77,7 +77,7 @@ man kan radera.
 
 Spring Boot 4 på Java 25. Server-renderad HTML med [jte](https://jte.gg) och
 [htmx](https://htmx.org), handskriven CSS, inget JavaScript-byggsteg och ingen npm.
-PostgreSQL 16 med Flyway. Kyrkoåret kommer från
+PostgreSQL 18 med Flyway. Kyrkoåret kommer från
 [lektionarium](https://github.com/marvi/lektionarium).
 
 Sidorna klarar sig i huvudsak med vanliga formulär. htmx används där en omladdning skulle
@@ -94,17 +94,30 @@ Kräver Java 25 och Podman. Java-versionen styrs av `mise.toml`; har du
 [mise](https://mise.jdx.dev) installerat sätts den automatiskt.
 
 ```bash
-# Databas för utveckling. Port 5433 med flit — 5432 är ofta upptagen av en annan
-# Postgres, och då kopplar appen tyst upp sig mot fel databas.
-podman run --rm -d --name ministra-db -p 5433:5432 \
-  -e POSTGRES_DB=ministra -e POSTGRES_USER=ministra -e POSTGRES_PASSWORD=ministra \
-  docker.io/library/postgres:18
-
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-Appen ligger på http://localhost:8080. Utan `-Dspring-boot.run.profiles=dev` startar den
-med produktionsinställningar och saknar databasadress.
+Databasen startar appen själv ur `compose.yaml`, och stoppar den när appen avslutas.
+Datat ligger kvar i containern till nästa gång. Samma sak händer när `MinistraApplication`
+körs i IntelliJ med profilen `dev`, och compose-filen gör att IDE:n ser både tjänsten och
+datakällan. Appen ligger på http://localhost:8080. Utan `-Dspring-boot.run.profiles=dev`
+startar den med produktionsinställningar och saknar databasadress.
+
+Spring Boot sköter containern genom kommandot `docker`, så med Podman behövs två saker:
+
+```bash
+sudo podman-mac-helper install       # /var/run/docker.sock pekar på Podmans socket
+brew install docker docker-compose   # bara klienterna, ingen Docker Desktop
+```
+
+`docker` pratar då med Podman, och `docker-compose` startar containern. Alternativet är
+en symlänk `docker` som pekar på `podman`; det fungerar också, men skriver ut en varning
+vid varje anrop.
+
+Vill du köra databasen på annat sätt stänger du av compose-stödet med
+`-Dspring.docker.compose.enabled=false`. Då används adressen i
+`application-dev.properties`: port 5433, med flit — 5432 är ofta upptagen av en annan
+Postgres, och då kopplar appen tyst upp sig mot fel databas.
 
 Det finns ingen mejlserver i utvecklingsläget. Mejlen hamnar i tabellen `outbox_email`
 och går att titta på där.
@@ -132,7 +145,8 @@ src/main/java/ministra/
   calendar/   kyrkoåret, via lektionarium-api
   poll/       domänen: förfrågan, deltagare, svar
   mail/       texterna, outboxen, den dagliga sammanfattningen
-  web/        controller, hastighetsgräns, formatering
+  schedule/   förslaget på schema, en ren fördelning av svaren
+  web/        controller, hastighetsgräns, noindex
 src/main/jte/           mallarna
 src/main/resources/db/  Flyway-migreringar
 ```
@@ -155,7 +169,7 @@ läses med `journalctl`.
 - [docs/decisions.md](docs/decisions.md) — beslutslogg, ett beslut per post med
   motivering och vad som förkastades
 - [AGENTS.md](AGENTS.md) — arbetsregler för den som utvecklar, människa eller agent
-- [FRAGOR.md](FRAGOR.md) — frågor och fynd från implementationen
+- [FRAGOR.md](FRAGOR.md) — öppna frågor som dykt upp mitt i ett arbete
 
 Läs beslutsloggen innan du föreslår arkitekturändringar. Flera saker som ser konstiga ut
 är medvetna val.

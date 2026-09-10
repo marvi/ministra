@@ -1,0 +1,16 @@
+# Databas för lokal utveckling. Spring Boot startar den själv när appen körs med
+# dev-profilen, via spring-boot-docker-compose (D-047). Går även att starta för hand:
+#
+#   podman compose up -d
+#
+# Port 5433 med flit: 5432 är ofta upptagen av en annan Postgres på utvecklarmaskinen,
+# och då kopplar appen tyst upp sig mot fel databas. Samma major som produktionen (D-045).
+services:
+  db:
+    image: docker.io/library/postgres:18
+    environment:
+      POSTGRES_DB: ministra
+      POSTGRES_USER: ministra
+      POSTGRES_PASSWORD: ministra
+    ports:
+      - "5433:5432"

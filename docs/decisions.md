@@ -1,43 +1,40 @@
 # Beslut
 
-Kort logg över arkitekturval. Ett beslut per post: vad, varför, och vad som förkastades.
-Lägg till nya poster längst ned. Ändra ett beslut genom att markera det som ersatt och
-skriva en ny post — radera inte historik.
+Arkitekturval, ett per post: vad, varför, och vad som förkastades. Lägg till nya poster
+längst ned. Ändras ett beslut skrivs posten om så att den beskriver det som gäller.
+Ersätts det helt får det en ny post, och den gamla kortas till en hänvisning så att
+numren förblir stabila. Historiken finns i git.
 
 ---
 
 ## D-001 — PostgreSQL med Spring Data JPA
-**2026-09-09 · Gäller**
 
-Persistens sker med PostgreSQL och `spring-boot-starter-data-jpa`, som redan ligger i
-`pom.xml`.
+Persistens sker med PostgreSQL och `spring-boot-starter-data-jpa`.
 
 Datamängden är liten och gallras löpande, så alternativet var handskriven SQL via
 `JdbcClient`, eller till och med en SQLite-fil. JPA valdes ändå: det är den väg som ger
 minst friktion för schemamigreringar och relationer, och prestanda är inte en faktor vid
 den här skalan.
 
-**Målversion är PostgreSQL 16** — en befintlig instans i produktion, `postgresql16-server
-16.15` från PGDG, som körs på värden och delas med annat. Se
-D-015 för vad det innebär.
-
-Testa mot riktig Postgres via Testcontainers, inte H2 — annars fångas inte skillnader i
-datumhantering och constraints. Pinna imagen till samma major: `postgres:16`. Testa inte
-mot 17 eller 18.
+Produktionen kör **PostgreSQL 18** på värden, se
+[D-045](#d-045--postgres-18-på-värden-och-drift-via-vps-deploy). Testa mot riktig
+Postgres via Testcontainers, inte H2 — annars fångas inte skillnader i datumhantering
+och constraints. Pinna imagen till samma major: `postgres:18`.
 
 ## D-002 — Drift på egen server som Podman-quadlet under systemd
-**2026-09-09 · Gäller**
 
-Appen körs i en container på egen server, startad av systemd via en quadlet
-(`ministra.container` i `/etc/containers/systemd/` eller `~/.config/containers/systemd/`
-vid rootless drift). Ingen PaaS, ingen lös jar, ingen `docker compose`.
+Appen körs i en container på egen server, startad av systemd via en quadlet. Ingen PaaS,
+ingen lös jar, ingen `docker compose`. Quadleten genereras av vps-deploy
+([D-045](#d-045--postgres-18-på-värden-och-drift-via-vps-deploy)); det här repot
+innehåller ingen unit-fil.
 
 Konsekvenser att arbeta efter:
 
-- **Deployerbar artefakt är en OCI-image**, inte en jar. Bygget måste producera en image.
-- **Konfiguration via miljövariabler ur en env-fil.** Quadleten pekar ut den med
-  `EnvironmentFile=`; `Environment=`-rader i unit-filen används inte. Se D-014.
-- Läs aldrig konfiguration från en fil i arbetskatalogen, och lägg ingen
+- **Deployerbar artefakt är en OCI-image**, inte en jar
+  ([D-032](#d-032--avbilden-byggs-av-github-actions-till-ghcrio)).
+- **Konfiguration via miljövariabler ur env-filer**, som quadleten pekar ut med
+  `EnvironmentFile=` ([D-014](#d-014--konfiguration-i-env-filer-inte-i-unit-filen)).
+  Läs aldrig konfiguration från en fil i arbetskatalogen, och lägg ingen
   `application-prod.properties` i imagen.
 - **Loggar till stdout/stderr**, så att `journalctl` fungerar. Skriv inte till loggfiler.
 - **Hälsokontroll** via Spring Boot Actuator, kopplad till quadletens `HealthCmd=`.
@@ -45,21 +42,14 @@ Konsekvenser att arbeta efter:
   plattformsspecifika beroenden (managed-tjänsters SDK:er, leverantörsspecifika
   secret stores).
 
-Följdbesluten är fattade: avbilden byggs enligt D-032, Podman körs rootless enligt D-034,
-och vägen till värdens Postgres beskrivs i D-015.
-
-> D-015 och D-034 är sedan ersatta av
-> [D-045](#d-045--postgres-18-på-värden-och-drift-via-vps-deploy): servern provisioneras av
-> vps-deploy, som genererar quadleten och sköter databasen. Kärnan här gäller fortfarande.
-
 ## D-003 — Server-renderad HTML med jte och htmx
-**2026-09-09 · Gäller**
 
 Ingen SPA, inget JS-byggsteg, ingen npm. jte-mallar i `src/main/jte`, htmx för partiella
 uppdateringar, handskriven CSS.
 
-Appen har fyra vyer och ingen klientstate värd namnet. Ett frontendramverk skulle kosta
-mer i underhåll än det ger.
+Appen har fem vyer. Den enda klientstate som finns är arbetsbladet för förslag på schema
+([D-046](#d-046--ett-förslag-på-schema-som-hjälpmedel)), och det är handskriven
+JavaScript utan ramverk. Ett frontendramverk skulle kosta mer i underhåll än det ger.
 
 htmx används på ett ställe: att lägga till ett eget datum i dagvalet byter bara ut listan
 i stället för att ladda om sidan ([D-043](#d-043--skaparen-får-lägga-till-egna-datum)).
@@ -70,33 +60,28 @@ Biblioteket serveras från appen som `/js/htmx-2.0.4.min.js`. Inga externa resur
 vid körning, och filnamnet bär versionen så att en uppgradering blir en synlig ändring.
 
 ## D-004 — Identifierare på engelska, kommentarer och gränssnitt på svenska
-**2026-09-09 · Gäller. Preciserat samma dag.**
 
-Se avsnittet Språk i [AGENTS.md](../AGENTS.md). Motivet är att koden ska följa
-Java-konventioner medan användarna är svensktalande församlingsmedlemmar.
+Identifierare — klasser, metoder, fält, testnamn, commit-meddelanden — är engelska.
+Kommentarer, javadoc och allt som en användare ser är svenska. Se avsnittet Språk i
+[AGENTS.md](../AGENTS.md).
 
-> **Preciserat 2026-09-09.** Beslutet sa ursprungligen "kod på engelska" och räknade upp
-> kommentarer och testnamn. Koden som skrevs följde det inte: javadoc och kommentarer blev
-> svenska, och 78 av 98 testmetoder fick svenska namn med å, ä och ö. Inkonsekvensen
-> löstes åt två håll.
->
-> **Kommentarer och javadoc är svenska.** Det är dokumentation, och all annan
-> dokumentation — beslutsloggen, produkttexten, AGENTS.md — är svensk. Domänord som
-> "förbedjare" och "kyrkoåret" och hänvisningar som "D-013" ska inte behöva översättas
-> mitt i koden. Regeln ändrades.
->
-> **Testnamn är engelska.** De är identifierare: de skrivs på kommandorad
-> (`-Dtest=Klass#metod`), hamnar i CI-rapporter och lever i klassfiler. Java tillåter
-> å, ä och ö där, och bygget är UTF-8 — men ett tyst beroende på att varje verktyg som
-> någonsin rör koden talar UTF-8 är inget att bära när alternativet är gratis. Koden
-> ändrades: alla 98 döptes om. Svenska utan prickar — `inte_ar_sondagar` — övervägdes
-> och avvisades som det sämsta av båda.
->
-> Gränsen är alltså: **det kompilatorn ser är engelskt och ASCII; det människor läser
-> är svenskt.** Samma princip som [D-038](#d-038--svenska-i-ci-filerna) för CI-filerna.
+Koden följer Java-konventioner medan användarna är svensktalande församlingsmedlemmar.
+
+**Kommentarer och javadoc är svenska** för att de är dokumentation, och all annan
+dokumentation — beslutsloggen, produkttexten, AGENTS.md — är svensk. Domänord som
+"förbedjare" och "kyrkoåret" och hänvisningar som "D-013" ska inte behöva översättas mitt
+i koden.
+
+**Testnamn är engelska.** De är identifierare: de skrivs på kommandorad
+(`-Dtest=Klass#metod`), hamnar i CI-rapporter och lever i klassfiler. Java tillåter å, ä
+och ö där, och bygget är UTF-8 — men ett tyst beroende på att varje verktyg som någonsin
+rör koden talar UTF-8 är inget att bära när alternativet är gratis. Svenska utan prickar
+— `inte_ar_sondagar` — avvisades som det sämsta av båda.
+
+Gränsen är alltså: **det kompilatorn ser är engelskt och ASCII; det människor läser är
+svenskt.** Samma princip som [D-038](#d-038--svenska-i-ci-filerna) för CI-filerna.
 
 ## D-005 — En roll, inte fem
-**2026-09-09 · Gäller**
 
 Förbedjare, textläsare, ministranter, kyrkvärdar och lovsångsledare modelleras inte var
 för sig. De är samma sak: en grupp människor som ska täcka gudstjänster. Vilken sorts uppgift
@@ -117,7 +102,6 @@ Bygg därför aldrig:
 Appen visar de svar som kommit in. Att avgöra om de räcker är en mänsklig bedömning.
 
 ## D-006 — Länkar är capability-URL:er med separata tokens
-**2026-09-09 · Gäller**
 
 Åtkomst sker enbart via länk, utan konton. Varje förfrågan har två oberoende tokens: ett
 för att svara och ett för att administrera.
@@ -127,16 +111,14 @@ avsnittet Integritet och säkerhet i [AGENTS.md](../AGENTS.md) för de fullstän
 kraven på tokengenerering och skydd mot uppräkning.
 
 ## D-007 — Kyrkoårsdata endast från lektionarium-api
-**2026-09-09 · Gäller**
 
-Söndagsnamn, datum och liturgisk färg hämtas alltid från `io.marvi:lektionarium-api`.
-Ingen egen påskberäkning, inga hårdkodade namnlistor.
+Dagarnas namn och datum hämtas alltid från `io.marvi:lektionarium-api`. Ingen egen
+påskberäkning, inga hårdkodade namnlistor.
 
 API:t levereras från det privata repot `https://maven.marvi.work` och saknar javadoc.
 Den verifierade API-ytan är dokumenterad i [AGENTS.md](../AGENTS.md).
 
 ## D-008 — Användarvänlig före minimal
-**2026-09-09 · Gäller**
 
 Målet är inte minsta möjliga app utan en app där det är **svårt att göra fel**. Färre val
 per skärm, tydliga förval, ingen funktion som kräver att användaren förstår modellen
@@ -146,11 +128,10 @@ Mobil och skärm är likvärdiga. Inte "fungerar även på mobil" — lika bra. 
 lösningar som bara finns vid hover eller högerklick, och kräver träffytor som fungerar
 med tumme.
 
-Detta ersätter den tidigare formuleringen "superenkel", som i praktiken lästes som
-"få funktioner" i stället för "lätt att använda".
+"Superenkel" är medvetet inte ordet: det läses som "få funktioner" i stället för "lätt
+att använda".
 
 ## D-009 — Namn är unika inom en förfrågan
-**2026-09-09 · Gäller**
 
 Deltagare identifieras enbart med förnamn, och namnet måste vara unikt inom förfrågan.
 Vid kollision visas en varning och personen får själv särskilja sig — "Anna J".
@@ -163,7 +144,6 @@ Alternativet vore ett genererat deltagar-id, men det kräver att deltagaren hål
 på något — och hela poängen är att man bara klickar på en länk och skriver sitt namn.
 
 ## D-010 — Svar är oföränderliga, och alla ser alla
-**2026-09-09 · Gäller**
 
 Ett inlämnat svar kan inte redigeras. Utan konton finns ingen säker väg tillbaka till
 just ditt svar, och att låta vem som helst med länken redigera vems svar som helst vore
@@ -182,12 +162,10 @@ Alla deltagare ser samtliga svar med namn. Det är avsiktligt — syftet är att
 luckorna finns. Konsekvensen är att den som har länken ser hela gruppens tillgänglighet,
 och det är en accepterad exponering, inte en bugg.
 
-## D-011 — Två schemalagda jobb
-**2026-09-09 · Gäller**
+## D-011 — Daglig sammanfattning och gallring
 
-> **Ändrat av D-030:** jobben är numera tre. Ett tömningsjobb för outbox tillkom.
-
-Appen har exakt två återkommande jobb:
+Appen har tre återkommande jobb: de två domänjobben nedan, och tömningen av outboxen
+([D-030](#d-030--outbox-för-all-utgående-post)).
 
 1. **Daglig sammanfattning** vid dagens slut. Ett mejl per skapare, som listar vilka som
    svarat på vilka av hens förfrågningar sedan förra utskicket. Aldrig ett mejl per svar.
@@ -200,7 +178,6 @@ Sammanfattningen måste vara idempotent: ett omstartat jobb får inte mejla samm
 gånger.
 
 ## D-012 — `mailto:` med skaparen som mottagare
-**2026-09-09 · Gäller**
 
 Appen genererar en `mailto:`-länk med ämnesrad och färdig brödtext — titel, kommentar,
 svarslänken och en kort förklaring. **Skaparens egen adress ligger i To-fältet.**
@@ -215,7 +192,6 @@ Procentkoda body korrekt, inklusive radbrytningar som `%0A`. Håll texten kort o
 svarslänken tidigt — vissa klienter kapar långa `mailto:`-URL:er.
 
 ## D-013 — De tre valen förklaras med synlig text
-**2026-09-09 · Gäller**
 
 Innebörden av grönt, gult och rött står som synlig brödtext ovanför listan — inte i en
 hover, inte bakom en info-ikon. Det är precis det deltagaren ombeds göra, och hover
@@ -228,90 +204,63 @@ Texten:
 > annan kan.
 
 Etiketterna står kvar vid knapparna. Färgen är en förstärkning, aldrig den enda bäraren
-av innebörden.
+av innebörden. Det står "dag", inte "söndag", eftersom listan innehåller även jul, påsk
+och andra helgdagar ([D-040](#d-040--alla-gudstjänstdagar-inte-bara-söndagar)).
 
-> **Ändrat 2026-09-09 av [D-040](#d-040--alla-gudstjänstdagar-inte-bara-söndagar):**
-> texten sa tidigare "för varje söndag". Listan innehåller även jul, påsk och andra
-> helgdagar, så ordet är utbytt mot "dag".
-
-## D-014 — Konfiguration i en env-fil, inte i unit-filen
-**2026-09-09 · Gäller**
+## D-014 — Konfiguration i env-filer, inte i unit-filen
 
 All körtidskonfiguration — databas-URL, databaslösenord, SMTP-uppgifter, appens publika
-bas-URL — ligger i en env-fil på servern, som quadleten läser med `EnvironmentFile=`.
+bas-URL — ligger i env-filer på servern, som quadleten läser med `EnvironmentFile=`.
 Inga `Environment=`-rader i unit-filen.
 
 Skälen: konfigurationen kan ändras utan att unit-filen redigeras, unit-filen kan
-versionshanteras medan env-filen inte kan det, och hemligheter hamnar inte i något som
+genereras medan env-filerna inte kan det, och hemligheter hamnar inte i något som
 `systemctl cat` skriver ut.
 
 Praktiska krav:
 
-- Filen ägs av root med läge `0600` (rootful) respektive av tjänsteanvändaren (rootless).
-- Den ligger **aldrig** i repot. Checka in en `ministra.env.example` med tomma värden
-  som dokumentation av vilka variabler som finns.
-- Spring läser miljövariabler direkt, så `SPRING_DATASOURCE_PASSWORD` mappar till
-  `spring.datasource.password` utan extra kod. Uppfinn ingen egen konfigurationsläsare.
+- Filerna ägs av root med läge `0600`.
+- De ligger **aldrig** i repot. `deploy/ministra.local.env.example` dokumenterar det som
+  fylls i för hand; alla variabler är beskrivna i `deploy/README.md`.
+- Spring läser miljövariabler direkt, så `SPRING_MAIL_HOST` mappar till
+  `spring.mail.host` utan extra kod. Uppfinn ingen egen konfigurationsläsare.
 - Formatet är `NYCKEL=värde`, en per rad. systemd tolkar inte skalsyntax — inga
   `$OTHER_VAR`, inga kommandosubstitutioner, och citattecken blir en del av värdet om de
   inte omsluter hela värdet.
+
+Vilka filer det är, och vad som står var, avgörs av
+[D-045](#d-045--postgres-18-på-värden-och-drift-via-vps-deploy).
 
 Känd avvägning: värdena syns i containerns miljö och kan läsas av root via
 `podman inspect` eller `/proc/<pid>/environ`. `podman secret` eller systemd credentials
 skulle vara snävare. Det är accepterat på en server vi själva driftar — går kraven upp är
 det databaslösenordet och SMTP-lösenordet som flyttas först.
 
-## D-015 — Befintlig Postgres 16 på värden, delad instans
-**2026-09-09 · ERSATT av [D-045](#d-045--postgres-18-på-värden-och-drift-via-vps-deploy).**
+## D-015 — Ersatt
 
-> Instansen som beskrivs fanns inte på servern ministra faktiskt driftas på. Postgres finns
-> nu där, version 18, provisionerad av vps-deploy. Kraven på egen roll, egen databas,
-> `ddl-auto=validate` och Flyway gäller oförändrade; det som föll var `AddHost`,
-> `pg_hba`-ändringen för hand och major 16.
-
-Appen använder en **redan körande** PostgreSQL-instans i produktion:
-`postgresql16-server 16.15` (PGDG), installerad på värden — inte i en container, inte
-en instans vi äger ensamma.
-
-Det är en delad produktionsdatabas. Konsekvenser som är krav, inte råd:
-
-- **Egen databas och egen roll** för Ministra. Appens roll får rättigheter bara på sitt
-  eget schema. Aldrig superuser, aldrig `postgres`-rollen.
-- **`spring.jpa.hibernate.ddl-auto=validate`**, aldrig `update` och aldrig `create`.
-  Hibernate får inte ändra schemat i en delad produktionsinstans.
-- **Schemaändringar sker med Flyway** (D-033), versionerade i repot och körda av appen
-  vid uppstart (D-039). Rollen måste därför få ändra sitt eget schema — men ingenting
-  annat i den delade instansen.
-- Gallringsjobbet raderar bara Ministras egna tabeller. Inga `DROP`, inga
-  `TRUNCATE` mot något annat.
-- Testcontainers kör `postgres:16` för att matcha major-versionen.
-
-Containern når värden via `host.containers.internal`, satt med `AddHost=` i quadleten
-(D-034). Det kräver att `listen_addresses` och `pg_hba.conf` på värden släpper in
-podman-nätets adress — en ändring i en produktionsdatabas som görs medvetet, inte av
-misstag. Se `deploy/README.md`.
+Ersatt av [D-045](#d-045--postgres-18-på-värden-och-drift-via-vps-deploy). Beskrev en
+delad Postgres 16 på en värd ministra aldrig driftades på. Kraven på egen roll, egen
+databas, `ddl-auto=validate` och Flyway lever vidare där.
 
 ## D-016 — Skaparen får länkarna både på skärmen och per mejl
-**2026-09-09 · Gäller**
 
-Efter att en förfrågan skapats visas **båda** länkarna på skärmen med kopiera-knapp:
-svarslänken som ska delas ut, och administrationslänken som är skaparens egen. Samma två
-länkar skickas dessutom i ett mejl till skaparens adress.
-
-> **Förtydligat 2026-09-09:** kopiera-knappen är förvalet. Själva adressen står inte
-> framme utan visas på begäran ("Visa länken"). Utan JavaScript står den framme, eftersom
-> knappen då inte kan fungera (D-003).
+Efter att en förfrågan skapats visas **båda** länkarna på skärmen: svarslänken som ska
+delas ut, och administrationslänken som är skaparens egen. Kopiera-knappen är förvalet;
+själva adressen står inte framme utan visas på begäran ("Visa länken"). Utan JavaScript
+står den framme, eftersom knappen då inte kan fungera
+([D-003](#d-003--server-renderad-html-med-jte-och-htmx)). Samma två länkar skickas
+dessutom i ett mejl till skaparens adress.
 
 Mejlet gör e-postadressen till det den utges för att vara — vägen tillbaka — och
 validerar adressen på köpet: kommer inget mejl fram är den felskriven.
 
 Följden är att skapandet är en oautentiserad utgång som skickar mejl till en
-användarangiven adress. Den ska därför alltid hastighetsbegränsas, se D-017.
-Mejlet får inte innehålla mer fritext än titeln — ju mindre attackerarstyrd text som går
-ut från vår avsändardomän, desto bättre för leveransbarheten.
+användarangiven adress. Den ska därför alltid hastighetsbegränsas, se
+[D-017](#d-017--hastighetsgräns-per-ip-på-skapandet). Mejlet får inte innehålla mer
+fritext än titeln — ju mindre attackerarstyrd text som går ut från vår avsändardomän,
+desto bättre för leveransbarheten.
 
 ## D-017 — Hastighetsgräns per IP på skapandet
-**2026-09-09 · Gäller**
 
 Skapa-sidan är öppen — ingen inloggning, ingen lösenfras — men antalet skapade
 förfrågningar per IP och tidsenhet begränsas. Riktvärde: tio per timme.
@@ -319,8 +268,9 @@ förfrågningar per IP och tidsenhet begränsas. Riktvärde: tio per timme.
 Det räcker eftersom missbrukspotentialen är liten. Deltagarnas adresser finns aldrig i
 systemet, det finns inga lösenord att stjäla, tokens är ogissbara och förfrågningar
 raderar sig själva. Kvar finns bara två saker: att belasta servern, och att använda vår
-avsändardomän för att mejla en godtycklig adress via D-016. Båda stoppas av en gräns som
-ingen verklig användare någonsin märker.
+avsändardomän för att mejla en godtycklig adress via
+[D-016](#d-016--skaparen-får-länkarna-både-på-skärmen-och-per-mejl). Båda stoppas av en
+gräns som ingen verklig användare någonsin märker.
 
 Gränsen ska räknas i appen, inte förutsätta en reverse proxy. Bakom proxy måste
 klientens IP läsas ur `X-Forwarded-For` — annars ser alla ut att komma från samma adress
@@ -332,12 +282,12 @@ accepterat. Skulle appen någon gång köras i mer än en instans måste det tä
 någon sådan plan finns inte.
 
 ## D-018 — Dagarna härleds, svar bär sitt datum
-**2026-09-09 · Gäller**
 
 Det finns **ingen tabell för dagarna**. Förfrågan sparar startdatum och slutdatum.
 Listan räknas fram från lektionarium-API:t vid varje rendering, och varje svarsrad bär
-sitt eget datum. Undantagen i [D-041](#d-041--skaparen-får-ta-bort-dagar-innan-någon-svarat)
-är det enda som lagras.
+sitt eget datum. Det enda som lagras därutöver är skaparens justeringar: bortvalda dagar
+([D-042](#d-042--dagarna-väljs-innan-förfrågan-skapas)) och tillagda datum
+([D-043](#d-043--skaparen-får-lägga-till-egna-datum)).
 
 `ServiceDay` är alltså en record som beräknas — inte en entitet. Persistera den inte,
 cacha den inte i databasen.
@@ -350,7 +300,6 @@ förfrågan. Datumen och svaren påverkas inte, och en förfrågan lever bara en
 månader. Det är accepterat och väger lättare än en extra tabell.
 
 ## D-019 — Alla dagar måste besvaras
-**2026-09-09 · Gäller**
 
 Ett svar kan inte skickas in med luckor. Varje dag i listan måste ha ett av de tre valen.
 
@@ -359,14 +308,13 @@ fjärde färg att förklara i gränssnittet. Den som tittar på listan vet att e
 inte finns — allt som visas är någon som tagit ställning.
 
 Konsekvens: en lång period blir jobbig att fylla i, eftersom varje rad kräver ett aktivt
-val. Det är ett argument både för taket på periodens längd och för att skaparen ska kunna
-ta bort dagar ([D-041](#d-041--skaparen-får-ta-bort-dagar-innan-någon-svarat)) — se den öppna frågan i
-[product.md](product.md).
+val. Det är ett argument både för taket på periodens längd
+([D-020](#d-020--perioden-får-vara-högst-ett-halvår)) och för att skaparen ska kunna
+välja bort dagar ([D-042](#d-042--dagarna-väljs-innan-förfrågan-skapas)).
 
 Valideringen ska ske på servern, inte bara i formuläret.
 
 ## D-020 — Perioden får vara högst ett halvår
-**2026-09-09 · Gäller**
 
 Från första till sista dagen får det vara högst sex månader, alltså omkring 33
 gudstjänstdagar. Valideras på servern.
@@ -381,7 +329,6 @@ Nedre gräns finns också: startdatum får inte ligga före `LiturgicalYear.FIRS
 härifrån.
 
 ## D-021 — "Giltig till" verkställs av nattjobbet, inte på sekunden
-**2026-09-09 · Gäller**
 
 Förfrågan fungerar som vanligt tills gallringsjobbet kör och raderar den. Ingen separat
 låsning vid exakt tidpunkt, ingen "utgången"-vy.
@@ -394,7 +341,6 @@ inte "raderas klockan". Formulera det inte så att någon tror att sista svarsch
 minuten.
 
 ## D-022 — Publik bas-URL konfigureras explicit
-**2026-09-09 · Gäller**
 
 Appen står bakom en reverse proxy. Den publika adressen läses ur en miljövariabel i
 env-filen, exempelvis `MINISTRA_BASE_URL=https://ministra.example.se`.
@@ -408,7 +354,6 @@ Klientens IP till hastighetsgränsen ([D-017](#d-017--hastighetsgräns-per-ip-p�
 läses däremot ur `X-Forwarded-For`, och proxyn måste konfigureras att sätta den.
 
 ## D-023 — Svarssidan visar hela listan direkt
-**2026-09-09 · Gäller**
 
 Den som klickar på svarslänken ser med en gång alla dagar och allas hittills lämnade
 svar. Namnrutan står överst, men listan döljs inte bakom den.
@@ -418,10 +363,9 @@ namn redan står där — vilket är precis den situation kollisionsvarningen i
 [D-009](#d-009--namn-är-unika-inom-en-förfrågan) finns för.
 
 ## D-024 — Ett nattligt jobb, sammanfattning före gallring
-**2026-09-09 · Gäller**
 
-De två jobben i [D-011](#d-011--två-schemalagda-jobb) körs i **samma nattliga pass**
-klockan 22:00 `Europe/Stockholm`, i denna ordning:
+De två domänjobben i [D-011](#d-011--daglig-sammanfattning-och-gallring) körs i **samma
+nattliga pass** klockan 22:00 `Europe/Stockholm`, i denna ordning:
 
 1. Daglig sammanfattning
 2. Gallring av utgångna förfrågningar
@@ -429,18 +373,14 @@ klockan 22:00 `Europe/Stockholm`, i denna ordning:
 Ordningen är inte godtycklig: en förfrågan som går ut idag ska ge skaparen en sista
 sammanfattning av dagens svar innan den raderas. Omvänd ordning tappar den tyst.
 
-> **Ändrat av D-030:** stycket nedan om att jobbet självt mejlar gäller inte längre.
-> Sammanfattningsjobbet skriver en outbox-rad och sätter `notified_at` i samma
-> transaktion; ett annat jobb skickar. Ordningen mellan sammanfattning och gallring
-> gäller fortfarande.
+Idempotens löses med ett `notified_at` på `Response`. Sammanfattningen plockar svar där
+det är `null`, skriver en outbox-rad ([D-030](#d-030--outbox-för-all-utgående-post)) och
+sätter `notified_at` i samma transaktion. Ett omstartat jobb mejlar då inte om samma
+svar. Själva sändningen sköter tömningsjobbet.
 
-Idempotens löses med ett `notified_at` på `Response`. Jobbet plockar svar där det är
-`null`, mejlar, och sätter det. Ett omstartat jobb mejlar då inte om samma svar.
-
-Har inget nytt kommit in skickas inget mejl. Inga "det hände ingenting"-utskick.
+Har inget nytt kommit in skrivs ingen rad. Inga "det hände ingenting"-utskick.
 
 ## D-025 — Skaparen anger namn och är själv deltagare
-**2026-09-09 · Gäller**
 
 Skapa-formuläret frågar efter **förnamn och e-postadress**. Skaparen är nästan alltid
 själv med i gruppen, och ska kunna fylla i sin tillgänglighet direkt när förfrågan är
@@ -462,7 +402,6 @@ och `creatorName` är fortfarande ledigt för någon annan. Det är avsiktligt: 
 förslag, inte en låsning.
 
 ## D-026 — Radering bekräftas med ett steg
-**2026-09-09 · Gäller**
 
 Raderaknappen visar en tydlig varning med "Radera" och "Avbryt". Ingen inskriven titel,
 ingen dubbel bekräftelse.
@@ -477,7 +416,6 @@ Använd inte webbläsarens `confirm()` — en dialog i sidan, med samma tumvänl
 som resten ([D-008](#d-008--användarvänlig-före-minimal)).
 
 ## D-027 — Admin-vyn är svarsvyn med tillägg
-**2026-09-09 · Gäller**
 
 Det finns inte två listvyer. Administrationslänken visar samma sammanställning som
 svarslänken, plus:
@@ -486,12 +424,13 @@ svarslänken, plus:
 - `mailto:`-knappen ([D-012](#d-012--mailto-med-skaparen-som-mottagare))
 - raderaknappen ([D-026](#d-026--radering-bekräftas-med-ett-steg))
 - namnrutan förifylld med skaparens namn ([D-025](#d-025--skaparen-anger-namn-och-är-själv-deltagare))
+- knappen till förslaget på schema, när det finns minst tre svar
+  ([D-046](#d-046--ett-förslag-på-schema-som-hjälpmedel))
 
 En vy, en mall, ett ställe att ändra. Efter skapandet landar skaparen här och kan fylla i
 sin tillgänglighet på en gång.
 
 ## D-028 — Personuppgifter vi lagrar
-**2026-09-09 · Gäller**
 
 Fullständig förteckning. Tillkommer något ska den här listan uppdateras i samma ändring.
 
@@ -512,7 +451,6 @@ Deltagarnas e-postadresser lagras aldrig. Ingen IP-adress sparas — hastighetsg
 i databasen.
 
 ## D-029 — AhaSend som e-postleverantör, via SMTP
-**2026-09-09 · Gäller**
 
 Utgående post går genom **AhaSend** (AhaSend B.V., Nederländerna) över **SMTP**, med
 `spring-boot-starter-mail`. Inget REST-API, ingen leverantörs-SDK.
@@ -547,14 +485,14 @@ Krav som följer:
   per förfrågan. Fribeloppet på 1 000 per månad räcker med bred marginal.
 
 ## D-030 — Outbox för all utgående post
-**2026-09-09 · Gäller. Ändrar D-011 och D-024.**
 
 Ingenting i appen skickar mejl direkt. Allt skrivs som en rad i en `outbox_email`-tabell,
 och ett eget jobb tömmer kön.
 
-Skälet är inte leveransgarantier — volymen motiverar inte sådant. Skälet är att D-024
-annars innehåller en dubbelskrivning: "markera svaren som rapporterade" och "skicka
-mejlet" träffar två system utan gemensam transaktion. En krasch mellan dem ger antingen
+Skälet är inte leveransgarantier — volymen motiverar inte sådant. Skälet är att
+sammanfattningen ([D-024](#d-024--ett-nattligt-jobb-sammanfattning-före-gallring))
+annars vore en dubbelskrivning: "markera svaren som rapporterade" och "skicka mejlet"
+träffar två system utan gemensam transaktion. En krasch mellan dem ger antingen
 dubbletter eller, värre, svar som markerats som rapporterade utan att något mejl gick
 iväg — och som därför aldrig rapporteras. Med en outbox blir de två skrivningarna
 **samma transaktion** och problemet upphör att finnas.
@@ -573,11 +511,10 @@ Utformning:
 - **Raden raderas när mejlet gått iväg.** Brödtexten innehåller förnamn, så den ska inte
   ligga kvar som ett arkiv ([D-028](#d-028--personuppgifter-vi-lagrar)).
 
-Jobben är därmed tre, inte två: tömning av outbox varje minut, samt sammanfattning och
-gallring i nattpasset enligt [D-024](#d-024--ett-nattligt-jobb-sammanfattning-före-gallring).
+Jobben är därmed tre: tömning av outbox varje minut, samt sammanfattning och gallring i
+nattpasset enligt [D-024](#d-024--ett-nattligt-jobb-sammanfattning-före-gallring).
 
 ## D-031 — Domän: ministra.marvi.work
-**2026-09-09 · Gäller**
 
 Appen kör på `https://ministra.marvi.work` att börja med. Det är en testadress, inte ett
 slutgiltigt namn — men den är riktig nog för att sätta upp SPF, DKIM och DMARC på och
@@ -591,12 +528,11 @@ DNS-posterna läggs på underdomänen, inte på `marvi.work`. Ett rykte som bygg
 raseras på `ministra.marvi.work` ska inte smitta av sig på annan post från `marvi.work`.
 
 ## D-032 — Avbilden byggs av GitHub Actions till ghcr.io
-**2026-09-09 · Gäller**
 
-En handskriven `Dockerfile` i repoten, byggd av ett GitHub Actions-flöde som publicerar
+En handskriven `Dockerfile` i repot, byggd av ett GitHub Actions-flöde som publicerar
 till `ghcr.io/marvi/ministra`. Inga buildpacks, ingen jib.
 
-Mönstret finns redan i [marvi/lektionarium](https://github.com/marvi/lektionarium) och
+Mönstret finns i [marvi/lektionarium](https://github.com/marvi/lektionarium) och
 ska följas, inte uppfinnas om:
 
 - Flerstegsbygge: `eclipse-temurin:25-jdk` för bygget, `eclipse-temurin:25-jre` för
@@ -609,65 +545,42 @@ ska följas, inte uppfinnas om:
   kontot i stället för på projektsidan.
 - `JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"` så att JVM:en rättar sig efter
   containerns minnesgräns.
-- `HEALTHCHECK` med curl mot `/actuator/health`.
+- `HEALTHCHECK` med curl mot `/actuator/health`, som `spring-boot-starter-actuator`
+  tillhandahåller.
 - `ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]`.
 
 Skillnader mot lektionarium: Ministra är en enda modul, så inget `-pl web -am`. Ingen
-Maven-artefakt publiceras och ingen GitHub-release skapas — bara avbilden. Tailscale-stegen
-behövs inte.
+Maven-artefakt publiceras och ingen GitHub-release skapas — bara avbilden.
 
-Två saker saknas i repot idag och måste till:
-
-- `spring-boot-starter-actuator` i `pom.xml`, annars finns ingen hälsokontroll att peka på.
-- `gg.jte.development-mode` står på `true` i `application.properties`. Det får inte följa
-  med i avbilden — mallarna ska vara förkompilerade i produktion.
+Mallarna är förkompilerade i avbilden: `gg.jte.development-mode=false` och
+`gg.jte.use-precompiled-templates=true` i `application.properties`. Dev-profilen slår om
+båda, så att mallar kan redigeras utan omstart lokalt.
 
 ## D-033 — Flyway för schemamigreringar
-**2026-09-09 · Gäller**
 
 Flyway med ren SQL i `src/main/resources/db/migration`. Versionerade filer i repot,
 aldrig handkörd DDL mot databasen.
 
 Valet är givet: Flyway används redan i andra projekt, och Hibernates `ddl-auto` står på
-`validate` mot en delad produktionsinstans
-([D-015](#d-015--befintlig-postgres-16-på-värden-delad-instans)).
+`validate` ([D-045](#d-045--postgres-18-på-värden-och-drift-via-vps-deploy)).
 
-Migreringen körs av appen vid uppstart, se D-039.
+Migreringen körs av appen vid uppstart, se
+[D-039](#d-039--flyway-körs-av-appen-vid-uppstart).
 
-## D-034 — Rootless Podman
-**2026-09-09 · ERSATT av [D-045](#d-045--postgres-18-på-värden-och-drift-via-vps-deploy).**
+## D-034 — Ersatt
 
-> vps-deploy kör quadlets som root under `/etc/containers/systemd/` men med `UserNS=auto`,
-> `DropCapability=all` och skrivskyddat rotfilsystem, vilket ger samma isolering utan
-> linger-användare. Anteckningen om Testcontainers och `podman.socket` gäller fortfarande för
-> lokal utveckling.
-
-Containern körs rootless, som en vanlig tjänsteanvändare.
-
-Konsekvenser:
-
-- Quadleten ligger i `~/.config/containers/systemd/ministra.container`, inte under
-  `/etc`. Enheten hanteras med `systemctl --user`.
-- `loginctl enable-linger` måste vara påslaget för användaren, annars stoppas tjänsten
-  när sessionen tar slut.
-- Portar under 1024 kan inte bindas. Appen lyssnar på en hög port och reverse proxyn tar
-  443 ([D-022](#d-022--publik-bas-url-konfigureras-explicit)).
-- Env-filen ägs av tjänsteanvändaren med läge `0600`
-  ([D-014](#d-014--konfiguration-i-en-env-fil-inte-i-unit-filen)).
-- Containern når värdens Postgres via `host.containers.internal`, vilket kräver
-  `PodmanArgs=--add-host=host.containers.internal:host-gateway` eller motsvarande, samt
-  att `pg_hba.conf` släpper in podman-nätets adress
-  ([D-015](#d-015--befintlig-postgres-16-på-värden-delad-instans)).
-- Testcontainers i utveckling kräver `systemctl --user enable --now podman.socket` och
-  `DOCKER_HOST=unix:///run/user/$UID/podman/podman.sock`.
+Ersatt av [D-045](#d-045--postgres-18-på-värden-och-drift-via-vps-deploy). Containern
+körs inte rootless: vps-deploy kör quadlets som root med `UserNS=auto`,
+`DropCapability=all` och skrivskyddat rotfilsystem, vilket ger samma isolering utan
+linger-användare. Testcontainers i utveckling kräver fortfarande podman-socketen, se
+avsnittet Tester i [AGENTS.md](../AGENTS.md).
 
 ## D-035 — All post i klartext, med fastställda formuleringar
-**2026-09-09 · Gäller**
 
 Ingen HTML. Alla mejl skickas som `text/plain`, ingen multipart.
 
 Skälet är vilka som faktiskt får posten. Deltagarna får aldrig något från appen — de får
-skaparens eget mejl, skrivet i hans egen klient. Appens enda mottagare är planerarna, en
+skaparens eget mejl, skrivet i hens egen klient. Appens enda mottagare är planerarna, en
 handfull personer, och mejlen är två till fem rader. HTML skulle ge en knapp i stället för
 en länk och kosta mall, inline-CSS, mörkt läge och bildblockering. Från en nystartad
 avsändardomän ([D-031](#d-031--domän-ministramarviwork)) är ren text dessutom den form
@@ -703,10 +616,8 @@ Förfrågan och alla svar raderas automatiskt efter {giltig till}.
 Ministra
 ```
 
-> **Ändrat 2026-09-09:** de två länkraderna löd tidigare "Skicka den här till dem som ska
-> svara:" och "Den här är din egen. Spara den — med den ser du svaren och kan radera
-> förfrågan:". De är kortade och lyder nu som rubrikerna i länkrutan på skaparens sida,
-> så att mejlet och skärmen säger samma sak.
+De två länkraderna lyder som rubrikerna i länkrutan på skaparens sida, så att mejlet och
+skärmen säger samma sak.
 
 **Kommentarsfältet får inte med.** Skapandet är en oautentiserad utgång som mejlar till
 en användarangiven adress ([D-016](#d-016--skaparen-får-länkarna-både-på-skärmen-och-per-mejl)),
@@ -784,7 +695,6 @@ församlingsmedlemmar ska inte få mejl utan prickar. Är kommentaren tom ska de
 raden också bort, inte lämna ett hål i texten.
 
 ## D-036 — Startdagen måste ligga i framtiden
-**2026-09-09 · Gäller**
 
 En förfrågan kan bara skapas för dagar som ännu inte varit. Skapa-formuläret erbjuder
 gudstjänstdagar från och med imorgon, och servern avvisar allt annat — formuläret går att
@@ -794,12 +704,11 @@ Skapas förfrågan på en söndag är den söndagen alltså inte med. Det är av
 samla in tillgänglighet för en gudstjänst som börjar om några timmar är inte vad appen är
 till för.
 
-Kravet gör kontrollen mot `LiturgicalYear.FIRST_SUPPORTED_YEAR` i tjänsten överflödig — en
-dag i framtiden ligger alltid efter 2004 — och den är därför borttagen därifrån.
-`ChurchCalendar` vaktar fortfarande gränsen internt, vilket är rätt ställe för den.
+Kravet gör en kontroll mot `LiturgicalYear.FIRST_SUPPORTED_YEAR` i tjänsten överflödig —
+en dag i framtiden ligger alltid efter 2004. `ChurchCalendar` vaktar gränsen internt,
+vilket är rätt ställe för den.
 
 ## D-037 — Liturgisk färg visas inte
-**2026-09-09 · Gäller**
 
 Kyrkoårs-API:t ger `Day.color()` — vit, röd, violett, blå, svart, grön, rosa. Den visas
 inte, och `ServiceDay` bär den inte.
@@ -810,31 +719,29 @@ blir förvirrande, och färg får aldrig bära information ensam
 konkurrera med den enda färgkodning sidan har råd med.
 
 ## D-038 — Svenska i CI-filerna
-**2026-09-09 · Gäller**
 
 Stegnamn och kommentarer i `.github/workflows/` skrivs på svenska, som i
 [marvi/lektionarium](https://github.com/marvi/lektionarium).
 
-Det är ett medvetet undantag från [D-004](#d-004--kod-på-engelska-gränssnitt-på-svenska).
+Det är ett medvetet undantag från
+[D-004](#d-004--identifierare-på-engelska-kommentarer-och-gränssnitt-på-svenska).
 YAML-filerna är operatörsnära snarare än kod — de läses när ett bygge gått sönder — och
 konsekvens mellan repona väger tyngre än regeln. Java-koden är fortfarande engelsk,
 undantagslöst.
 
 ## D-039 — Flyway körs av appen vid uppstart
-**2026-09-09 · Gäller**
 
 Migreringarna körs av applikationen när den startar, inte som ett eget deploysteg.
 
-Konsekvensen är att appens databasroll måste få ändra sitt eget schema, vilket mjukar upp
-minsta-rättighet-principen i [D-015](#d-015--befintlig-postgres-16-på-värden-delad-instans).
-Rollen ska fortfarande vara begränsad till sin egen databas och sitt eget schema — aldrig
-superuser, aldrig rättigheter på något annat i den delade instansen.
+Konsekvensen är att appens databasroll måste få ändra sitt eget schema. Rollen äger sin
+databas och ingenting annat
+([D-045](#d-045--postgres-18-på-värden-och-drift-via-vps-deploy)) — aldrig superuser,
+aldrig rättigheter på något annat i instansen.
 
 Det enkla som fungerar väger tyngre här: en deploy är att starta om containern, och då ska
 schemat följa med utan ett extra manuellt steg som kan glömmas bort.
 
 ## D-040 — Alla gudstjänstdagar, inte bara söndagar
-**2026-09-09 · Gäller. Ändrar D-013, D-018, D-019, D-020, D-035 och D-036.**
 
 Listan innehåller varje dag kyrkoåret firar med gudstjänst — inte bara söndagar. Juldagen,
 annandag jul, Långfredagen, Kristi himmelsfärds dag, Annandag pingst, Midsommardagen,
@@ -847,45 +754,26 @@ Stilla veckan är `OrdinaryDay` — de faller därmed bort av sig själva. Varje
 `HolyDay`; verifierat för 2026 till 2030. Ett år har ungefär 66 gudstjänstdagar, varav 52
 söndagar.
 
-Följden är att ordet "söndag" är utbytt mot "dag" i gränssnittet och i mejlen, inklusive
-de ordagrant beslutade texterna i [D-013](#d-013--de-tre-valen-förklaras-med-synlig-text)
+Därför står det "dag", inte "söndag", i gränssnittet och i mejlen, inklusive de
+ordagrant beslutade texterna i [D-013](#d-013--de-tre-valen-förklaras-med-synlig-text)
 och [D-035](#d-035--all-post-i-klartext-med-fastställda-formuleringar).
 
-Typen heter fortfarande `ServiceDay`, inte `HolyDay`. Vårt begrepp är "en dag som behöver
-bemannas", inte en liturgisk kategori — och namnet skulle dessutom krocka med den
-importerade `lectio.cal.HolyDay`, som betyder något annat: en dag med egna texter.
-`SundayView` heter numera `ServiceDayView`.
+Typen heter `ServiceDay`, inte `HolyDay`. Vårt begrepp är "en dag som behöver bemannas",
+inte en liturgisk kategori — och namnet skulle dessutom krocka med den importerade
+`lectio.cal.HolyDay`, som betyder något annat: en dag med egna texter.
 
-## D-041 — Skaparen får ta bort dagar, innan någon svarat
-**2026-09-09 · ERSATT av [D-042](#d-042--dagarna-väljs-innan-förfrågan-skapas).**
+## D-041 — Ersatt
 
-> Urvalet flyttades till skapandet i stället för att vara en efterhandsredigering i
-> admin-vyn. Motivet nedan gäller fortfarande; mekanismen gör det inte.
-
-Efter att förfrågan skapats kan skaparen ta bort dagar ur listan, och lägga tillbaka dem
-igen. Ingen församling bemannar allt: förbedjare används inte på Alla helgons dag eller
-under fastan, utom på Jungfru Marie bebådelsedag. Extra helgdagar som ingen ska ta
-förvirrar bara den som ska svara.
-
-**Listan går bara att ändra så länge ingen har svarat.** Vid första inlämnade svaret
-fryses den, och knapparna försvinner.
-
-Det villkoret är det som gör resten enkel. Så länge det inte finns några svar går varje
-ändring att ångra, ingenting går förlorat, och därför behövs varken varning eller
-bekräftelse. Efteråt vore det inte sant: en tillagd dag skulle sakna svar hos den som
-redan fyllt i, och [D-019](#d-019--alla-dagar-måste-besvaras) säger att det inte finns
-något obesvarat tillstånd. Alternativet — att radera svaren för en borttagen dag — vore
-en destruktiv åtgärd på en sida full av knappar.
-
-Modellen: en tabell `excluded_day` med `(poll_id, service_date)`. Bara undantagen lagras;
-dagarna själva räknas fortfarande fram ur kyrkoåret
-([D-018](#d-018--dagarna-härleds-svar-bär-sitt-datum)). Mängden hämtas ivrigt, eftersom
-den alltid behövs när listan visas.
-
-Minst en dag måste vara kvar. En tom förfrågan är inte något att skicka ut.
+Ersatt av [D-042](#d-042--dagarna-väljs-innan-förfrågan-skapas). Dagar valdes bort i
+efterhand i admin-vyn, med listan låst så snart någon svarat. Urvalet sker nu innan
+förfrågan skapas; tabellen `excluded_day` är densamma.
 
 ## D-042 — Dagarna väljs innan förfrågan skapas
-**2026-09-09 · Gäller. Ersätter D-041.**
+
+Ingen församling bemannar allt: förbedjare används inte på Alla helgons dag eller under
+fastan, utom på Jungfru Marie bebådelsedag, och extra helgdagar som ingen ska ta förvirrar
+bara den som ska svara. Därför väljer skaparen bort dagar — och gör det innan förfrågan
+finns.
 
 Skapandet sker i två steg:
 
@@ -895,17 +783,28 @@ Skapandet sker i två steg:
    dem som inte ska med — de gråmarkeras och stryks över, och går att klicka tillbaka.
    Först vid **Spara** skapas förfrågan.
 
-Därefter landar skaparen som förut på admin-vyn med länkarna och sin egen namnruta
-förifylld (D-016, D-027).
+Därefter landar skaparen på admin-vyn med länkarna och sin egen namnruta förifylld
+([D-016](#d-016--skaparen-får-länkarna-både-på-skärmen-och-per-mejl),
+[D-027](#d-027--admin-vyn-är-svarsvyn-med-tillägg)).
 
 Varför före i stället för efter: valet hör hemma där man redan tänker på perioden, inte
 som en efterhandsredigering på en sida som annars handlar om att dela ut länken. Och
 eftersom förfrågan inte finns ännu finns det ingenting att förlora — därför behövs varken
-varning, bekräftelse eller den låsning D-041 krävde när första svaret kommit in.
+varning, bekräftelse eller någon låsning när första svaret kommit in. Efteråt vore det
+inte sant: en tillagd dag skulle sakna svar hos den som redan fyllt i, och
+[D-019](#d-019--alla-dagar-måste-besvaras) säger att det inte finns något obesvarat
+tillstånd.
 
 **Efterhandsredigering finns inte.** Upptäcker skaparen ett misstag efteråt raderas
 förfrågan och görs om; länken har inte hunnit skickas ut, och raderaknappen står på samma
-sida. Två vägar till samma sak vore ett val för mycket (D-008).
+sida. Två vägar till samma sak vore ett val för mycket
+([D-008](#d-008--användarvänlig-före-minimal)).
+
+Modellen: en tabell `excluded_day` med `(poll_id, service_date)`. Bara undantagen lagras;
+dagarna själva räknas fortfarande fram ur kyrkoåret
+([D-018](#d-018--dagarna-härleds-svar-bär-sitt-datum)). Mängden hämtas ivrigt, eftersom
+den alltid behövs när listan visas. Minst en dag måste vara kvar — en tom förfrågan är
+inte något att skicka ut.
 
 Genomförande:
 
@@ -919,12 +818,11 @@ Genomförande:
   bortvalt är dämpat och överstruket, så att skillnaden inte bara är färg.
 - Knappen är `aria-hidden`. Kryssrutan bär tillståndet för skärmläsare, och namnet ska
   vara dagen — inte ett verb som växlar.
-- Hastighetsgränsen (D-017) räknas i steg två, där förfrågan faktiskt skapas.
-- Minst en dag måste vara med. Går det inte igenom visas dagsidan igen med felet och
-  kryssen kvar som de var.
+- Hastighetsgränsen ([D-017](#d-017--hastighetsgräns-per-ip-på-skapandet)) räknas i steg
+  två, där förfrågan faktiskt skapas.
+- Går det inte igenom visas dagsidan igen med felet och kryssen kvar som de var.
 
 ## D-043 — Skaparen får lägga till egna datum
-**2026-09-09 · Gäller**
 
 Utöver kyrkoårets dagar kan skaparen lägga till valfria datum i dagvalet. En församling
 kan fira ett lokalt helgon eller en egen högtid som inte finns i Svenska kyrkans kyrkoår.
@@ -955,8 +853,7 @@ jämföras med det efterfrågade innan namnet används.
 Tabellen `extra_day (poll_id, service_date)`, spegelbilden av `excluded_day`. Fortfarande
 ingen tabell över dagarna själva ([D-018](#d-018--dagarna-härleds-svar-bär-sitt-datum)).
 
-Tjänstens signatur behövde inte ändras. Dagvalssidan arbetar på en kandidatlista, och
-`create` härleder båda mängderna ur den:
+Dagvalssidan arbetar på en kandidatlista, och `create` härleder båda mängderna ur den:
 
 ```
 bortvalda = kyrkodagar − behållna
@@ -977,9 +874,8 @@ En dag utan namn visar bara sitt datum. Kortet blir kortare, och det är rätt �
 inget mer att säga om den.
 
 ## D-044 — Svarsvyns utformning
-**2026-09-09 · Gäller**
 
-Efter en mockup av svarsvyn på mobil. Det mesta i den är antaget; två saker är avvisade.
+Så här ser svarsvyn ut, och två saker som avvisades.
 
 **Antaget:**
 
@@ -1001,19 +897,17 @@ Efter en mockup av svarsvyn på mobil. Det mesta i den är antaget; två saker �
 
 **Avvisat:**
 
-- **Grönt som märkesfärg.** Mockupens spara-knapp var mörkgrön — samma gröna som en vald
-  "Kan". Trafikljuset äger grönt, gult och rött; ingenting annat på sidan får tala det
-  språket. Accenten är indigo och ska förbli något utanför de tre.
+- **Grönt som märkesfärg.** Trafikljuset äger grönt, gult och rött; ingenting annat på
+  sidan får tala det språket. Accenten är indigo och ska förbli något utanför de tre.
 - **Andras svar per person** ("Anna ● Kan"). Vackert med en deltagare; med tio
   textläsare och trettio dagar blir det trehundra rader. Svaren grupperas per färg —
-  högst tre rader per dag — men med mockupens stil: färgad punkt och ordet utskrivet.
+  högst tre rader per dag — med färgad punkt och ordet utskrivet.
 
-**Fonter** är oförändrade: Georgia i rubrikerna, systemets sans i brödtexten, noll byte
-att ladda. Vill vi ha ett eget ansikte är Source Serif 4 (SIL OFL) för rubrikerna det
-val som stämmer med självhostningskravet; brödtexten stannar i systemets sans.
+**Fonter:** Georgia i rubrikerna, systemets sans i brödtexten, noll byte att ladda. Vill
+vi ha ett eget ansikte är Source Serif 4 (SIL OFL) för rubrikerna det val som stämmer
+med självhostningskravet; brödtexten stannar i systemets sans.
 
 ## D-045 — Postgres 18 på värden och drift via vps-deploy
-**2026-09-09 · Gäller**
 
 Servern provisioneras av **vps-deploy**, Ansible-repot som äger den. Ministra är där en
 tjänst av typen `container` i `services.yml`, som lektionarium: vps-deploy genererar
@@ -1027,8 +921,8 @@ services.yml; rollen äger databasen och når ingenting annat.
 Skälen:
 
 - **En sanning om servern.** vps-deploy vet redan vad som körs, hur Caddy är uppsatt, vad
-  brandväggen släpper igenom och hur en tjänst avvecklas. En handskriven rootless-quadlet
-  vid sidan av hade varit en andra sanning som gradvis glider isär från den första.
+  brandväggen släpper igenom och hur en tjänst avvecklas. En handskriven quadlet vid
+  sidan av hade varit en andra sanning som gradvis glider isär från den första.
 - **Central databas framför en per pod.** Backupen blir en timer för alla databaser över
   lokal socket, `psql` fungerar från tailnetet utan `podman exec`, och minnet delas. Priset
   är att alla appar följer samma major. Det accepteras: en major-uppgradering är ändå en
@@ -1038,7 +932,8 @@ Skälen:
 
 Konsekvenser:
 
-- **Konfigurationen är fortfarande bara miljövariabler** (D-014), nu i tre filer som
+- **Konfigurationen är fortfarande bara miljövariabler**
+  ([D-014](#d-014--konfiguration-i-env-filer-inte-i-unit-filen)), i tre filer som
   quadleten läser i ordning: `/etc/ministra.env` genereras ur `environment:` i services.yml
   och innehåller allt som inte är hemligt; `/etc/ministra.db.env` innehåller
   `MINISTRA_DB_PASSWORD`, genererat på servern första gången; `/etc/ministra.local.env`
@@ -1050,11 +945,13 @@ Konsekvenser:
   eftersom `podman0` och `tailscale0` inte finns vid uppstart. Brandväggen håller 5432
   stängd på det externa interfacet, och `pg_hba.conf` känner bara podman-nätet och
   tailnetet. Två oberoende lager.
-- **Rollen äger sin databas**, så Flyway vid uppstart (D-039) kräver inga rättigheter för
-  hand. `ddl-auto=validate` står kvar.
+- **Rollen äger sin databas**, så Flyway vid uppstart
+  ([D-039](#d-039--flyway-körs-av-appen-vid-uppstart)) kräver inga rättigheter för hand.
+  `ddl-auto=validate` står kvar.
 - **Release** är en tagg (`tools/release.sh`). Flödet bygger och publicerar avbilden
-  (D-032), triggar `podman auto-update` över tailnetet och väntar tills `/actuator/health`
-  svarar UP genom Caddy. Rullar podman tillbaka blir flödet rött.
+  ([D-032](#d-032--avbilden-byggs-av-github-actions-till-ghcrio)), triggar
+  `podman auto-update` över tailnetet och väntar tills `/actuator/health` svarar UP genom
+  Caddy. Rullar podman tillbaka blir flödet rött.
 - **Backup** sköts av vps-deploy: nattliga `pg_dump` per databas plus roller, fjorton dagars
   historik.
 
@@ -1062,23 +959,19 @@ Avvisat:
 
 - **Egen Postgres i en pod tillsammans med appen.** Klar att köra, men förlorade på backup
   och åtkomst, se ovan.
-- **Dela Umamis Postgres.** Två appar i en instans som en av dem äger är exakt den delade
-  situation som D-015 försökte disciplinera fram rättigheter i.
-- **Rootless podman** (D-034). vps-deploy:s rootful quadlets med `UserNS=auto` ger samma
+- **Dela en annan apps Postgres.** Två appar i en instans som en av dem äger är exakt
+  den delade situation som kräver disciplin kring rättigheter.
+- **Rootless podman.** vps-deploy:s rootful quadlets med `UserNS=auto` ger samma
   isolering utan linger-användare, och passar resten av servern.
 
 ## D-046 — Ett förslag på schema, som hjälpmedel
-**2026-09-09 · Gäller**
 
 Skaparen får en knapp, **"Ge förslag på schema"**, när förfrågan har tre eller fler svar.
 Den leder till ett arbetsblad där appen har fördelat dem som svarat på dagarna, och där
 skaparen flyttar om, lägger till och tar bort tills schemat ser ut som hen vill. Resultatet
-tas ut med "Kopiera som text" eller utskrift. Planen finns i
-[plan-schemaforslag.md](plan-schemaforslag.md).
+tas ut med "Kopiera som text" eller utskrift.
 
-Det är första gången appen gör något med svaren utöver att visa dem. product.md förutsåg
-det som en tänkbar vidareutveckling, och README och AGENTS sa att appen *inte* fördelar.
-Det ändras nu, med tre gränser som står kvar:
+Det är det enda appen gör med svaren utöver att visa dem, och tre gränser står fast:
 
 - **Förslaget är ett hjälpmedel, avgörandet är skaparens.** Appen föreslår; människan
   bestämmer. Förslaget visas aldrig för gruppen, bara under admin-token.
@@ -1087,28 +980,112 @@ Det ändras nu, med tre gränser som står kvar:
   fält, ingen ny rad i [D-028](#d-028--personuppgifter-vi-lagrar). Laddas sidan om börjar
   man om.
 - **Appen vet fortfarande inte hur många som behövs.** Skaparen anger personer per dag i
-  en väljare på arbetsbladet, och talet följer med som en parameter i adressen. Det är
-  inte det fält [D-005](#d-005--en-roll-inte-fem) förbjuder: det sparas inte, och det
-  ger ingen förloppsindikator eller varning på svarsvyn.
+  en väljare på arbetsbladet, förval 1 och högst 4, och talet följer med som parametern
+  `perDag` i adressen. Det är inte det fält [D-005](#d-005--en-roll-inte-fem) förbjuder:
+  det sparas inte, och det ger ingen förloppsindikator eller varning på svarsvyn.
 
-Algoritmen är deterministisk och utan slump, så samma svar ger samma förslag. Reglerna,
-i prioritetsordning: aldrig "kan inte"; grönt före gult, alltid; rättvist antal; utspritt;
-knappa dagar först. Lika-fall avgörs av svarsordningen, aldrig av namn i bokstavsordning.
-En person läggs aldrig på en dag hen sagt nej till, varken av förslaget eller av
-skaparen: sådana dagar tar inte emot brickan.
+### Algoritmen
+
+`ministra.schedule.Scheduler` är en ren funktion utan Spring och utan slump, så samma
+svar ger samma förslag. Reglerna, i prioritetsordning:
+
+1. **Aldrig "kan inte".** Hellre en tom plats.
+2. **Grönt före gult, alltid.** En gul plats fylls bara när ingen grön finns kvar för
+   dagen — även om den gröna redan har flest dagar eller gick förra gången.
+3. **Rättvist antal** bland de gröna: den som har färst dagar hittills får nästa. Vid
+   lika: den som har längst till sin närmaste egna dag.
+4. **Utspritt** bland de gröna: inte två gudstjänstdagar i rad om det går att undvika
+   med en annan grön, och i övrigt så långt mellan en persons dagar som möjligt. Regeln
+   viker när svaren inte räcker, men aldrig till gult.
+5. **Knappa dagar först:** dagarna fylls i ordning efter hur få gröna som finns, inte
+   kronologiskt. Utdata är kronologisk ändå.
+
+Lika-fall avgörs av svarsordningen, aldrig av namn i bokstavsordning, så att inte "Anna"
+alltid får mer än "Åke".
+
+### Arbetsbladet
+
+Route `GET /a/{token}/schema`, bara admin-token. Servern räknar fram förslaget och
+renderar det med all data i DOM:en; allt därefter sköter `static/js/schedule.js`.
+
+- **Brickraden** överst: en bricka per person som svarat, i svarsordning, med en siffra
+  för hur många dagar personen har just nu. Härifrån kopieras brickor ned på dagar;
+  brickan i raden försvinner aldrig.
+- **Dagarna som ett rutnät**, en kolumn på mobil och två till fyra på skärm, med veckodag,
+  datum och kyrkoårsnamn som i listan. En tom dag visar "Ingen".
+- **Brickans färg** är personens svar för just den dagen: grön för "kan", gul för "om det
+  behövs", med ordet utskrivet så att färgen aldrig bär ensam. Rött förekommer inte: en
+  person läggs aldrig på en dag hen sagt nej till, varken av förslaget eller av skaparen.
+  Sådana dagar tonas ned och tar inte emot brickan.
+- **Två sätt att flytta som ser likadana ut.** Dra och släpp med pekarhändelser
+  (`pointerdown`/`move`/`up`), inte HTML5:s drag-API som saknas i Chrome på Android och
+  är lynnigt i Safari på iOS. Under det: klicka-klicka — ett klick markerar brickan och
+  tänder de dagar personen kan, nästa klick på en dag lägger dit den. Ett drag som slutar
+  där det började räknas som ett klick. Klicka-klicka är vägen för tangentbord och
+  skärmläsare, och för den som tappar ett drag på pekskärm.
+- **Kryss** på en bricka på en dag tar bort den därifrån. Kryss på en bricka i brickraden
+  tar bort personen helt från arbetsbladet, med ångra. Så hanteras dubbelsvar: "Anna" och
+  "Anna Ny" är två deltagare ([D-010](#d-010--svar-är-oföränderliga-och-alla-ser-alla)),
+  och skaparen tar bort den ena.
+- **Tillgänglighet:** brickorna är `<button>`, dagarna har `aria-label`, och en
+  `aria-live`-region säger "Frida flyttad till söndag 4 oktober" vid varje flytt.
+- **Utan JavaScript** visas förslaget som en färdig sida att läsa och skriva ut, men inte
+  flytta i. Det som bara fungerar med skript göms
+  ([D-003](#d-003--server-renderad-html-med-jte-och-htmx)).
+- Loggen får en rad på INFO med förfrågans id, antal dagar och antal personer. Inga namn.
 
 **"Kopiera som text" är inte den export
 [D-010](#d-010--svar-är-oföränderliga-och-alla-ser-alla) avvisar.** Den lägger schemat,
-inte svaren, på skaparens eget urklipp, byggt i webbläsaren ur det som står på skärmen.
-Det är skaparens arbete på väg ut ur appen, samma sak som att skriva av listan för hand.
-Svaren exporteras fortfarande inte, och gruppen får ingen ny vy.
+inte svaren, på skaparens eget urklipp, byggt i webbläsaren ur det som står på skärmen,
+en rad per dag: `sön 4 okt · Tacksägelsedagen: Frida, Ola`. Det är skaparens arbete på
+väg ut ur appen, samma sak som att skriva av listan för hand. Svaren exporteras
+fortfarande inte, och gruppen får ingen ny vy.
 
 Avvisat:
 
 - **Att spara schemat**, dela det med gruppen eller mejla det. Det vore en ny
   personuppgift och en ny vy, och skaparen tar ändå schemat vidare i sitt eget verktyg.
 - **PDF.** Utskriftsstilen räcker.
-- **Dubbelsvar som algoritmen städar.** "Anna" och "Anna Ny" är två deltagare (D-010).
-  Skaparen tar bort den ena från arbetsbladet med ett kryss, med ångra.
+- **Att komma ihåg arbetsbladet över en sidladdning.** `sessionStorage` vore billigt, men
+  det är en annan sak än "stateless", och vi vet inte att det behövs.
+- **Dubbelsvar som algoritmen städar.** Skaparen ser vilken rad som är den gamla;
+  algoritmen kan inte.
 - **En "nytt förslag"-knapp.** Förslaget är deterministiskt och skaparen flyttar själv.
   Lätt att lägga till senare som en rotationsparameter i samma adress.
+
+## D-047 — Utvecklingsdatabasen startas ur compose.yaml
+
+`spring-boot-docker-compose` ligger som optional-beroende, och `compose.yaml` i
+projektroten beskriver en Postgres 18 på port 5433 med samma uppgifter som
+`application-dev.properties`. När appen körs med dev-profilen startar Spring Boot
+containern, läser uppkopplingen ur den och stoppar den när appen avslutas. Från IntelliJ
+eller `./mvnw spring-boot:run` finns alltså ingen databas att starta för hand, och
+compose-filen är det IDE:n behöver för att visa tjänsten och datakällan.
+
+Skälen: ett kommando i stället för två, uppgifterna på ett ställe i stället för i ett
+`podman run` som ska skrivas av från README, och en fil IntelliJ förstår.
+
+Gränser:
+
+- **Modulen följer inte med i avbilden.** `spring-boot-maven-plugin` utesluter den vid
+  repackage, och `optional` håller den borta från beroendeträdet. Produktionen
+  konfigureras som förut ([D-014](#d-014--konfiguration-i-env-filer-inte-i-unit-filen)).
+- `spring.docker.compose.enabled` är `false` i `application.properties` och `true` bara i
+  dev-profilen. Compose rör sig aldrig utanför lokal utveckling.
+- **Testerna använder Testcontainers som förut.** Compose-stödet hoppar över tester av sig
+  självt, och `PostgresTest` äger sin egen container.
+- Adressen i `application-dev.properties` står kvar som reserv för den som stänger av
+  compose-stödet och kör en egen Postgres.
+- **Podman:** Spring Boot kör kommandot `docker` och därefter `docker compose` eller
+  `docker-compose`. Med Podman behövs `podman-mac-helper` för socketen och Dockers klient
+  från Homebrew. En symlänk från `docker` till `podman` fungerar också: `podman compose`
+  delegerar till `docker-compose`. Båda vägarna är verifierade med podman 6.1 och
+  docker-compose 2.39.
+
+Avvisat:
+
+- **Testcontainers även vid körning**, genom en `main` under `src/test` med
+  `@ServiceConnection`. Kräver en egen startklass och ger IDE:n ingenting att visa;
+  compose-filen läses av människa, IDE och `podman compose` lika.
+- **`down` i stället för `stop` vid avslut.** Datat ska ligga kvar mellan körningar, så
+  att en halvfärdig förfrågan inte försvinner vid varje omstart.

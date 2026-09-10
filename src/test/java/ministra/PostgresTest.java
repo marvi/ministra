@@ -5,7 +5,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
  * Riktig Postgres, inte H2 — annars fångas inte skillnader i datumhantering och
- * constraints (D-001). Versionen matchar produktionens major (D-015).
+ * constraints (D-001). Versionen matchar produktionens major (D-045).
  *
  * <p>Containern startas i ett statiskt block och lämnas åt Testcontainers att städa bort
  * när JVM:en avslutas. Med {@code @Testcontainers} och {@code @Container} stoppas den i

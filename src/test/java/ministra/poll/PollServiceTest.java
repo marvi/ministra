@@ -119,7 +119,7 @@ class PollServiceTest extends PostgresTest {
 
     @Test
     void rejects_a_start_day_in_the_past() {
-        // Formuläret erbjuder bara framtida söndagar, men det går att posta förbi det.
+        // Formuläret erbjuder bara framtida dagar, men det går att posta förbi det.
         assertThatThrownBy(() ->
                         create(form(LocalDate.of(2026, 8, 2), LocalDate.of(2026, 9, 6))))
                 .isInstanceOf(SubmissionException.class)

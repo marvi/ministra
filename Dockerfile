@@ -39,7 +39,7 @@ FROM docker.io/library/eclipse-temurin:25-jre
 # image.source kopplar paketet till repot på GitHub. Utan den hamnar avbilden löst under
 # kontot i stället för på projektsidan.
 LABEL org.opencontainers.image.source="https://github.com/marvi/ministra" \
-      org.opencontainers.image.description="Samlar in tillgänglighet inför söndagens gudstjänster"
+      org.opencontainers.image.description="Samlar in tillgänglighet från frivilliga inför kyrkoårets gudstjänster"
 
 # curl används av hälsokontrollen längre ned.
 RUN apt-get update \
