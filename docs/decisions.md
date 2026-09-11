@@ -681,13 +681,17 @@ Jag planerar "{titel}" och behöver veta vilka dagar du kan. Fyll i här:
 {kommentar}
 
 Du markerar Kan, Om det behövs eller Kan inte för varje dag, och skriver ditt
-förnamn överst. Det tar ett par minuter. Svara gärna före {giltig till}.
+förnamn överst. Det tar ett par minuter.
 
 Hälsningar
 {skaparens förnamn}
 ```
 
 Länken ligger tidigt med flit — vissa klienter kapar långa `mailto:`-URL:er.
+
+Ingen svarsfrist i texten. "Giltig till" är dagen förfrågan raderas, inte dagen skaparen
+vill ha svar, och den som planerar vill oftast ha svar inom några dagar. Skaparen skriver
+själv en frist i mejlet om hen vill ha en.
 
 Body procentkodas som UTF-8: radbrytning blir `%0A`, och å, ä, ö blir `%C3%A5`, `%C3%A4`,
 `%C3%B6`. Skriv inte om texten till ren ASCII för att slippa kodningen — svenska

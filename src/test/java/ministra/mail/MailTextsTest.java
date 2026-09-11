@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import ministra.MinistraProperties;
+import ministra.calendar.Dates;
 import ministra.poll.Poll;
 import org.junit.jupiter.api.Test;
 
@@ -132,6 +133,16 @@ class MailTextsTest {
         var linkPosition = body.indexOf("https://ministra.marvi.work/s/SVARSTOKEN");
         assertThat(linkPosition).isPositive();
         assertThat(linkPosition).isLessThan(120);
+    }
+
+    @Test
+    void invitation_does_not_mention_the_deletion_date_as_a_deadline() {
+        // "Giltig till" är när förfrågan raderas, inte när skaparen vill ha svar (D-035).
+        var poll = poll("Sakristaner", null);
+        var body = texts.invitationBody(poll);
+
+        assertThat(body).doesNotContain("Svara gärna före");
+        assertThat(body).doesNotContain(Dates.format(poll.getValidUntil()));
     }
 
     @Test

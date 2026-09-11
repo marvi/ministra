@@ -120,15 +120,17 @@ public class MailTexts {
         if (poll.hasComment()) {
             body.append(poll.getComment().strip()).append("\n\n");
         }
+        // Ingen svarsfrist: "Giltig till" är när förfrågan raderas, inte när skaparen vill
+        // ha svar. Vill hen ha svar inom några dagar skriver hen det själv i mejlet.
         body.append(
                 """
                 Du markerar Kan, Om det behövs eller Kan inte för varje dag, och skriver ditt
-                förnamn överst. Det tar ett par minuter. Svara gärna före %s.
+                förnamn överst. Det tar ett par minuter.
 
                 Hälsningar
                 %s
                 """
-                        .formatted(Dates.format(poll.getValidUntil()), poll.getCreatorName()));
+                        .formatted(poll.getCreatorName()));
         return body.toString();
     }
 
