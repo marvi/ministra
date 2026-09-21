@@ -24,7 +24,7 @@
     <p>Förfrågan sparas först när du klickar på <strong>Skapa förfrågan</strong> i detta steg.</p>
 
     <h2>4. Dina två länkar</h2>
-    <p>När förfrågan har skapats visas två capability-länkar (båda mejlas även till din angivna e-postadress):</p>
+    <p>När förfrågan har skapats visas två länkar (båda mejlas även till din angivna e-postadress):</p>
     <ul>
         <li><strong>Svarslänk (att dela ut):</strong> Denna länk skickar du till de frivilliga som ska svara. På sidan finns en knapp, <em>Skicka mejl</em>, som öppnar ditt vanliga e-postprogram med ett färdigt mejlförslag. Du lägger själv till mottagarna i ditt e-postprogram — appen lagrar aldrig deltagarnas adresser.</li>
         <li><strong>Administrationslänk (att spara):</strong> Denna länk är din privata sida. Här ser du alla inkomna svar, kan själv lämna ditt eget svar som deltagare, kan öppna arbetsbladet för schemaförslag, samt radera förfrågan om planeringen är klar. Dela inte denna länk vidare.</li>
