@@ -105,7 +105,7 @@ jobs:
       # Hälsan genom Caddy avgör om releasen faktiskt tar emot trafik.
       - name: Vänta på att den nya versionen svarar
         env:
-          URL: https://ministra.marvi.work/actuator/health
+          URL: https://ministra.se/actuator/health
         run: |
           for i in $(seq 1 30); do
             if curl -fsS --max-time 5 "$URL" | grep -q '"UP"'; then
