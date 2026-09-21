@@ -25,8 +25,8 @@
 </main>
 <footer class="footer">
     <div class="wrap">
-        <p>Ministra samlar in tillgänglighet inför gudstjänster. Inga konton.
-            Förfrågningar raderas automatiskt.</p>
+        <p>Gjort med ♥ av <a href="https://marvi.io">marvi.io</a>. Frågor och kommentarer:
+            <a href="mailto:markus@harnvi.net">markus@harnvi.net</a></p>
     </div>
 </footer>
 </body>

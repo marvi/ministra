@@ -106,6 +106,16 @@ class PollControllerTest {
     }
 
     @Test
+    void footer_links_to_creator_and_email() throws Exception {
+        mvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "href=\"https://marvi.io\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "href=\"mailto:markus@harnvi.net\"")));
+    }
+
+    @Test
     void every_response_carries_noindex() throws Exception {
         // Församlingens listor ska inte gå att googla.
         mvc.perform(get("/"))
