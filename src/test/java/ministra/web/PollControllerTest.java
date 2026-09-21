@@ -94,7 +94,15 @@ class PollControllerTest {
     void create_form_is_shown() throws Exception {
         mvc.perform(get("/"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Ny förfrågan")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Ny förfrågan")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("/guide")));
+    }
+
+    @Test
+    void guide_view_is_shown() throws Exception {
+        mvc.perform(get("/guide"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Användarguide")));
     }
 
     @Test

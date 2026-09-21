@@ -67,6 +67,11 @@ public class PollController {
 
     // ---------- Skapa ----------
 
+    @GetMapping("/guide")
+    public String guide() {
+        return "guide";
+    }
+
     @GetMapping("/")
     public String createForm(Model model) {
         return backToCreateForm(model, emptyForm(), Map.of());

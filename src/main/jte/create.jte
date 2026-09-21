@@ -14,8 +14,9 @@
 --%>
 @template.layout(title = "Ny förfrågan", content = @`
     <h1>Ny förfrågan</h1>
-    <p class="lede">Välj period, ge förfrågan ett namn och skicka länken till dem som ska
-        svara.</p>
+    <p class="lede">Det här är ett verktyg för att samla in svar på vem som kan medverka i gudstjänst. T.ex. för att planera textläsare, ministranter etc.</p>
+    <p class="lede">Steg ett: Välj period, ge förfrågan ett namn. Du får välja exakta dagar i nästa steg.</p>
+    <p><a href="/guide">Användarguide för dig som skapar en förfrågan &rarr;</a></p>
 
     <form method="post" action="/skapa">
         <h2>Vad och när</h2>
@@ -108,7 +109,7 @@
              framme innan man trycker, inte upptäckas efteråt. --%>
         <div class="form-end">
             <div class="actions">
-                <button type="submit">Välj dagar</button>
+                <button type="submit">Fortsätt</button>
             </div>
             <p class="meta">Nästa steg: du bockar av vilka dagar som ska ingå. Förfrågan
                 sparas först då.</p>
