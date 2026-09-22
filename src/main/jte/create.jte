@@ -6,13 +6,21 @@
 @param List<ServiceDay> days
 @param CreatePollForm form
 @param Map<String, String> errors
+@param String socialUrl
+@param String socialImageUrl
 
 <%--
   Hjälptexten ligger som syskon till etiketten, inte inuti den, och knyts till fältet med
   aria-describedby. Det är vad som låter två fält i bredd stå på samma linjer även när
   bara det ena har en hjälptext (D-048).
 --%>
-@template.layout(title = "Ny förfrågan", content = @`
+@template.layout(
+    title = "Ny förfrågan",
+    socialTitle = "Ministra – tillgänglighet inför gudstjänster",
+    socialDescription = "Samla in tillgänglighet från frivilliga inför kyrkoårets gudstjänster.",
+    socialUrl = socialUrl,
+    socialImageUrl = socialImageUrl,
+    content = @`
     <h1>Ny förfrågan</h1>
     <p class="lede">Det här är ett verktyg för att samla in svar på vem som kan medverka i gudstjänst. T.ex. för att planera textläsare, ministranter etc.</p>
     <p class="lede">Steg ett: Välj period, ge förfrågan ett namn. Du får välja exakta dagar i nästa steg.</p>

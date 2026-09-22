@@ -1144,3 +1144,23 @@ Avvisat:
   Kan tas upp igen; det är en större ändring än en förfining.
 - **`@layer`.** Skulle låta `!important` på `.needs-js` försvinna, men ändrar hur hela
   filen kaskaderar. Inte värt det i samma ändring som utseendet byts.
+
+## D-049 — Social förhandsvisning utan deltagaruppgifter
+
+Startsidan och svarslänken har Open Graph-metadata för att länkar som delas på Facebook
+ska få titel, beskrivning och en bild. Administrationslänken har ingen sådan metadata och
+är fortsatt blockerad för alla robotar.
+
+Facebook behöver hämta svarslänken för att bygga kortet. När användaragenten är
+`facebookexternalhit` eller `Facebot` renderar samma svarsvy därför bara förfrågans titel
+och den generiska beskrivningen — aldrig deltagarnas namn, deras svar eller förfrågans
+kommentar. En förfalskad användaragent ger inte mer åtkomst; den ger tvärtom mindre
+innehåll, och länktoken måste fortfarande vara giltigt.
+
+`robots.txt` tillåter de två förhandsvisningsrobotarna på de publika sidorna och
+svarslänkarna men blockerar `/a/`. Regeln för alla andra robotar är fortfarande
+`Disallow: /`, och `X-Robots-Tag: noindex, nofollow, noarchive` ligger kvar på alla svar.
+
+Delningsbilden är en statisk PNG på 1200 × 630 pixlar. URL:en byggs från
+`MINISTRA_BASE_URL`, aldrig från proxyhuvuden (D-022). Bilden innehåller inga uppgifter ur
+en förfrågan.

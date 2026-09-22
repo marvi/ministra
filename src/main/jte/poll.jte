@@ -13,8 +13,23 @@
 @param String mailto = null
 @param boolean canPropose = false
 @param boolean thanked = false
+@param boolean socialPreview = false
+@param String socialUrl = null
+@param String socialImageUrl = null
 
-@template.layout(title = view.poll().getTitle(), content = @`
+@template.layout(
+    title = view.poll().getTitle(),
+    socialTitle = socialUrl == null ? null : view.poll().getTitle() + " · Ministra",
+    socialDescription = socialUrl == null ? null : "Svara på vilka gudstjänstdagar du kan medverka.",
+    socialUrl = socialUrl,
+    socialImageUrl = socialImageUrl,
+    content = @`
+    @if(socialPreview)
+        <%-- Facebook behöver bara kortets uppgifter. Namn och svar lämnar aldrig servern
+             till förhandsvisningsroboten (D-049). --%>
+        <h1>${view.poll().getTitle()}</h1>
+        <p class="lede">Svara på vilka gudstjänstdagar du kan medverka.</p>
+    @else
     <h1>${view.poll().getTitle()}</h1>
 
     @if(view.poll().hasComment())
@@ -179,5 +194,6 @@
             </form>
         </div>
         <script src="/js/delete-confirm.js" defer></script>
+    @endif
     @endif
 `)

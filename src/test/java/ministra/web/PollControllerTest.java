@@ -99,6 +99,18 @@ class PollControllerTest {
     }
 
     @Test
+    void create_form_has_favicon_and_social_metadata() throws Exception {
+        mvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "href=\"/images/ministra-mark.svg\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "property=\"og:url\" content=\"https://test.example\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "https://test.example/images/ministra-share.png")));
+    }
+
+    @Test
     void guide_view_is_shown() throws Exception {
         mvc.perform(get("/guide"))
                 .andExpect(status().isOk())
@@ -146,6 +158,25 @@ class PollControllerTest {
     }
 
     @Test
+    void facebook_preview_does_not_include_participants_or_answers() throws Exception {
+        var subject = poll();
+        given(polls.byResponseToken("SVARSTOKEN")).willReturn(subject);
+        given(polls.view(subject)).willReturn(new PollView(subject, List.of(), List.of("Frida")));
+
+        mvc.perform(get("/s/SVARSTOKEN")
+                        .header("User-Agent", "facebookexternalhit/1.1"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "property=\"og:url\" content=\"https://test.example/s/SVARSTOKEN\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Sakristaner fram till påsk · Ministra")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("Frida"))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("Ditt förnamn"))));
+    }
+
+    @Test
     void admin_view_shows_both_links_and_the_mailto_button() throws Exception {
         var subject = poll();
         given(polls.byAdminToken("ADMINTOKEN")).willReturn(subject);
@@ -158,6 +189,18 @@ class PollControllerTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString(
                         "https://test.example/a/ADMINTOKEN")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("mailto:")));
+    }
+
+    @Test
+    void admin_view_has_no_social_metadata() throws Exception {
+        var subject = poll();
+        given(polls.byAdminToken("ADMINTOKEN")).willReturn(subject);
+        given(polls.view(subject)).willReturn(new PollView(subject, List.of(), List.of()));
+
+        mvc.perform(get("/a/ADMINTOKEN"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("property=\"og:url\""))));
     }
 
     @Test

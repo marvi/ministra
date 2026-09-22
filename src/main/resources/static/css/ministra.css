@@ -33,10 +33,10 @@
     --rule: #ddd6c9;
     --line: #c9beab;
 
-    /* Accenten är indigo med flit. Trafikljuset äger grönt, gult och rött; ingenting
-       annat på sidan får tala det språket (D-044). */
-    --accent: #4a3f7a;
-    --accent-soft: #ece9f6;
+    /* Märkesaccenten är hämtad från logotypens mörkaste vinröda. Den hålls mörk och
+       dämpad så att trafikljusets klarare signalfärger fortfarande har en egen roll. */
+    --accent: #86141a;
+    --accent-soft: #f2e5e3;
     --on-accent: #ffffff;
 
     /* Trafikljus. Färgen är alltid en förstärkning, aldrig ensam bärare (D-013). */
@@ -87,9 +87,9 @@
         --ink-soft: #99a4b0;
         --rule: #333a43;
         --line: #4a545f;
-        --accent: #b3a7e8;
-        --accent-soft: #262238;
-        --on-accent: #16191d;
+        --accent: #efa6a7;
+        --accent-soft: #351e21;
+        --on-accent: #271113;
 
         /* I mörkt läge är fyllningarna ljusa, så texten ovanpå dem måste vara mörk. */
         --can: #7fc79f;
@@ -120,6 +120,7 @@ h1, h2 {
     /* En serif i rubrikerna ger appen ett eget ansikte utan att hämta hem en font. */
     font-family: var(--serif);
     font-weight: 600;
+    color: var(--accent);
     text-wrap: balance;
 }
 
@@ -153,14 +154,23 @@ main { display: block; padding-block: var(--s6) var(--s7); }
     background: var(--bar);
 }
 
-.wordmark {
-    display: inline-block;
-    padding-block: var(--s3);
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s3);
+    min-height: var(--tap);
+    padding-block: var(--s2);
     font-family: var(--serif);
     font-size: var(--text-lg);
     letter-spacing: .02em;
     color: var(--accent);
     text-decoration: none;
+}
+
+.brand img {
+    display: block;
+    width: 3.5rem;
+    height: 3.5rem;
 }
 
 /* Foten speglar topplisten: linjen går över hela bredden, texten står i spalten. */

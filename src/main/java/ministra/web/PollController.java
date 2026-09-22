@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import ministra.MinistraProperties;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
@@ -188,6 +190,7 @@ public class PollController {
         model.addAttribute("days", polls.selectableDays(today()));
         model.addAttribute("form", form);
         model.addAttribute("errors", errors);
+        addSocialAttributes(model, properties.baseUrl());
         return "create";
     }
 
@@ -246,6 +249,7 @@ public class PollController {
     public String respond(
             @PathVariable String token,
             @RequestParam(name = "tack", required = false) @Nullable String thanks,
+            @RequestHeader(name = "User-Agent", required = false) @Nullable String userAgent,
             Model model) {
         var poll = polls.byResponseToken(token);
         model.addAttribute("view", polls.view(poll));
@@ -254,6 +258,8 @@ public class PollController {
         model.addAttribute("error", null);
         model.addAttribute("thanked", thanks != null);
         model.addAttribute("submitPath", "/s/" + token);
+        model.addAttribute("socialPreview", isFacebookCrawler(userAgent));
+        addSocialAttributes(model, properties.responseUrl(token));
         return "poll";
     }
 
@@ -371,6 +377,20 @@ public class PollController {
         model.addAttribute("mailto", texts.invitationMailto(poll));
         model.addAttribute("adminBase", base);
         model.addAttribute("submitPath", base + "/svar");
+    }
+
+    private void addSocialAttributes(Model model, String url) {
+        model.addAttribute("socialUrl", url);
+        model.addAttribute("socialImageUrl", properties.baseUrl() + "/images/ministra-share.png");
+    }
+
+    /** Facebook får förhandsvisningsuppgifter men aldrig deltagarnas namn eller svar. */
+    private static boolean isFacebookCrawler(@Nullable String userAgent) {
+        if (userAgent == null) {
+            return false;
+        }
+        var normalized = userAgent.toLowerCase(Locale.ROOT);
+        return normalized.contains("facebookexternalhit") || normalized.contains("facebot");
     }
 
     /**

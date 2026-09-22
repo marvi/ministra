@@ -1,2 +1,10 @@
+User-agent: facebookexternalhit
+Disallow: /a/
+Allow: /
+
+User-agent: Facebot
+Disallow: /a/
+Allow: /
+
 User-agent: *
 Disallow: /
