@@ -342,6 +342,19 @@ button, .button {
 
 .actions { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s4); }
 
+/* Felsidan har ett enda ärende: förklara läget och visa vägen hem. Felnumret är den
+   enda visuella markören och använder samma typografi och accent som övriga rubriker. */
+.status-page { max-width: 30rem; padding-block: var(--s4); }
+.status-code {
+    margin: 0 0 var(--s2);
+    color: var(--accent);
+    font-family: var(--serif);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    letter-spacing: .08em;
+}
+.status-page .actions { margin-top: var(--s5); }
+
 /* Slutet på ett formulär. Linjen säger att fälten är slut, och raden under knappen
    säger vad som händer när man trycker. */
 .form-end {
