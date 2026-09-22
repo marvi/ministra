@@ -103,11 +103,20 @@ class PollControllerTest {
         mvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "href=\"/css/ministra.css?v=2\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
                         "href=\"/images/ministra-mark.svg\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString(
                         "property=\"og:url\" content=\"https://test.example\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString(
                         "https://test.example/images/ministra-share.png")));
+    }
+
+    @Test
+    void static_resources_must_be_revalidated() throws Exception {
+        mvc.perform(get("/css/ministra.css"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "no-cache"));
     }
 
     @Test

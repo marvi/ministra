@@ -28,7 +28,8 @@
         <meta property="og:image:height" content="630">
         <meta property="og:image:alt" content="Ministrant med processionsljus bredvid namnet Ministra">
     @endif
-    <link rel="stylesheet" href="/css/ministra.css">
+    <%-- v=2 bryter gamla cachade svar. Cache-Control kräver omvalidering framöver. --%>
+    <link rel="stylesheet" href="/css/ministra.css?v=2">
     <%-- Självhostad, inga externa resurser (AGENTS.md). --%>
     <script src="/js/htmx-2.0.4.min.js" defer></script>
 </head>
