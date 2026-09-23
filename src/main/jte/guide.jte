@@ -1,4 +1,4 @@
-@template.layout(title = "Användarguide för att skapa förfrågan", content = @`
+@template.layout(title = "Användarguide för att skapa förfrågan", analytics = true, content = @`
     <h1>Användarguide: Skapa en förfrågan</h1>
     <p class="lede">Här beskrivs hur du som planerar och samlar in tillgänglighet inför gudstjänster använder Ministra från start till färdigt schema.</p>
 
@@ -60,6 +60,7 @@
     <ul>
         <li>Ministra lagrar endast förnamn på deltagare och skaparens e-postadress.</li>
         <li>Inga användarkonton, inga lösenord och inga kakor för spårning.</li>
+        <li>Anonym besöksstatistik samlas in med vår egen Umami-server. Ett skickat svar räknas, men förfrågans länk, titel, namn och svar skickas inte till statistiken. Administrationssidor ingår inte.</li>
         <li>Sidorna är skyddade mot sökmotorer och kan inte indexeras av Google.</li>
         <li>När giltighetstiden passerats raderas förfrågan och samtliga inkomna svar permanent.</li>
     </ul>

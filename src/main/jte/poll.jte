@@ -23,6 +23,8 @@
     socialDescription = socialUrl == null ? null : "Svara på vilka gudstjänstdagar du kan medverka.",
     socialUrl = socialUrl,
     socialImageUrl = socialImageUrl,
+    analytics = !admin,
+    analyticsEvent = !admin && thanked ? "response-submitted" : null,
     content = @`
     @if(socialPreview)
         <%-- Facebook behöver bara kortets uppgifter. Namn och svar lämnar aldrig servern

@@ -20,6 +20,7 @@
     socialDescription = "Samla in tillgänglighet från frivilliga inför kyrkoårets gudstjänster.",
     socialUrl = socialUrl,
     socialImageUrl = socialImageUrl,
+    analytics = true,
     content = @`
     <h1>Ny förfrågan</h1>
     <p class="lede">Det här är ett verktyg för att samla in svar på vem som kan medverka i gudstjänst. T.ex. för att planera textläsare, ministranter etc.</p>

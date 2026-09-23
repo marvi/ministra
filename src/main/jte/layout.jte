@@ -5,6 +5,8 @@
 @param String socialDescription = null
 @param String socialUrl = null
 @param String socialImageUrl = null
+@param boolean analytics = false
+@param String analyticsEvent = null
 <!DOCTYPE html>
 <html lang="sv">
 <head>
@@ -32,6 +34,21 @@
     <link rel="stylesheet" href="/css/ministra.css?v=2">
     <%-- Självhostad, inga externa resurser (AGENTS.md). --%>
     <script src="/js/htmx-2.0.4.min.js" defer></script>
+    @if(analytics)
+        <%-- Tokenvägar anonymiseras eller stoppas innan något skickas (D-050). --%>
+        <script src="/js/umami-privacy.js" defer></script>
+        <script src="/js/umami-2026-09-23.js" defer
+                data-host-url="https://umami.marvi.work"
+                data-website-id="422a3bba-5d6f-4721-af09-e7a318f4f7f0"
+                data-domains="ministra.se"
+                data-exclude-search="true"
+                data-exclude-hash="true"
+                data-do-not-track="true"
+                data-before-send="ministraUmamiBeforeSend"></script>
+        @if(analyticsEvent != null)
+            <script src="/js/umami-event.js" defer data-event="${analyticsEvent}"></script>
+        @endif
+    @endif
 </head>
 <%-- Bredden sitter på body, inte på main: annars vidgas innehållet på arbetsbladet
      medan topplisten står kvar och sidan får två vänsterkanter (D-048). --%>

@@ -1,4 +1,4 @@
-@template.layout(title = "Förfrågan raderad", content = @`
+@template.layout(title = "Förfrågan raderad", analytics = true, content = @`
     <h1>Förfrågan är raderad</h1>
     <p class="lede">Förfrågan och alla svar är borta.</p>
     <div class="actions">

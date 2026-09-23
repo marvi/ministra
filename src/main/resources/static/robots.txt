@@ -6,5 +6,10 @@ User-agent: Facebot
 Disallow: /a/
 Allow: /
 
+User-agent: LinkedInBot
+Disallow: /s/
+Disallow: /a/
+Allow: /
+
 User-agent: *
 Disallow: /

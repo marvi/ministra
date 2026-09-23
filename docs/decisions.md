@@ -444,6 +444,13 @@ Fullständig förteckning. Tillkommer något ska den här listan uppdateras i sa
 
 Utanför appen: AhaSend är personuppgiftsbiträde för sammanfattningsmejlens innehåll, med
 retention satt till noll ([D-029](#d-029--ahasend-som-e-postleverantör-via-smtp)).
+Den självhostade Umami-instansen lagrar anonymiserad besöksstatistik för publika vyer och
+inskickade svar: sidväg, sidtitel, händelsen `response-submitted`, referer, webbläsare,
+operativsystem, enhetstyp, skärmstorlek, språk och ungefärlig plats. Svarsvyn lagras bara
+under den generiska sidvägen `/s/` och titeln `Svara · Ministra`. IP-adressen används
+tillfälligt för plats och ett roterande sessions-id men lagras inte. Inga svars- eller
+administrationstokens skickas dit
+([D-050](#d-050--självhostad-umami-utan-capability-tokens)).
 
 Allt raderas när förfrågan gallras ([D-021](#d-021--giltig-till-verkställs-av-nattjobbet-inte-på-sekunden)).
 Deltagarnas e-postadresser lagras aldrig. Ingen IP-adress sparas — hastighetsgränsen i
@@ -1147,9 +1154,9 @@ Avvisat:
 
 ## D-049 — Social förhandsvisning utan deltagaruppgifter
 
-Startsidan och svarslänken har Open Graph-metadata för att länkar som delas på Facebook
-ska få titel, beskrivning och en bild. Administrationslänken har ingen sådan metadata och
-är fortsatt blockerad för alla robotar.
+Startsidan och svarslänken har Open Graph-metadata för att länkar som delas på sociala
+plattformar ska få titel, beskrivning och en bild. Administrationslänken har ingen sådan
+metadata och är fortsatt blockerad för alla robotar.
 
 Facebook behöver hämta svarslänken för att bygga kortet. När användaragenten är
 `facebookexternalhit` eller `Facebot` renderar samma svarsvy därför bara förfrågans titel
@@ -1157,10 +1164,40 @@ och den generiska beskrivningen — aldrig deltagarnas namn, deras svar eller f�
 kommentar. En förfalskad användaragent ger inte mer åtkomst; den ger tvärtom mindre
 innehåll, och länktoken måste fortfarande vara giltigt.
 
-`robots.txt` tillåter de två förhandsvisningsrobotarna på de publika sidorna och
-svarslänkarna men blockerar `/a/`. Regeln för alla andra robotar är fortfarande
-`Disallow: /`, och `X-Robots-Tag: noindex, nofollow, noarchive` ligger kvar på alla svar.
+`robots.txt` tillåter Facebooks två förhandsvisningsrobotar på de publika sidorna och
+svarslänkarna men blockerar `/a/`. LinkedIns `LinkedInBot` får läsa de publika sidorna
+och de statiska resurser som startsidans förhandsvisning behöver, men blockeras från både
+`/s/` och `/a/`. Regeln för alla andra robotar är fortfarande `Disallow: /`, och
+`X-Robots-Tag: noindex, nofollow, noarchive` ligger kvar på alla svar.
 
 Delningsbilden är en statisk PNG på 1200 × 630 pixlar. URL:en byggs från
 `MINISTRA_BASE_URL`, aldrig från proxyhuvuden (D-022). Bilden innehåller inga uppgifter ur
 en förfrågan.
+
+## D-050 — Självhostad Umami utan capability-tokens
+
+Ministra samlar in grundläggande webbstatistik med den självhostade Umami-instansen på
+`umami.marvi.work`. Trackern använder webbplats-id
+`422a3bba-5d6f-4721-af09-e7a318f4f7f0`; id:t identifierar datamängden och är inte en
+hemlighet.
+
+Statistik laddas på startsidan, guiden, skapandeflödet, bekräftelsen efter en raderad
+förfrågan och svarsvyn. Innan något skickas skriver ett `data-before-send`-skydd om
+`/s/{token}` till den generiska sidvägen `/s/` och titeln `Svara · Ministra`. En
+capability-länk tas också bort ur refererfältet. Administrationsvyn `/a/`,
+schemaarbetsbladet och felsidor laddar ingen statistik; skyddet stoppar dessutom varje
+händelse från `/a/` om trackern ändå skulle råka aktiveras där. Sökparametrar och fragment
+samlas inte in.
+
+Efter att servern har sparat ett svar och omdirigerat till tacksidan skickar klienten den
+fasta händelsen `response-submitted`. Därefter tas `?tack` bort ur adressfältet, så en
+omladdning inte dubbelräknas. Händelsen innehåller inga formulärvärden. Förfrågans token,
+titel, kommentar, deltagarnamn och tillgänglighet skickas alltså aldrig till Umami.
+
+Trackerskriptet serveras från appen som `/js/umami-2026-09-23.js`, i enlighet med
+självhostningskravet i D-003. `data-host-url` pekar själva insamlingen till
+`https://umami.marvi.work`. `data-domains=ministra.se` håller utvecklings- och
+testtrafik borta, och `data-do-not-track=true` respekterar webbläsarens DNT-inställning.
+
+Umami använder inga kakor. Den lagrade statistiken och IP-adressens tillfälliga användning
+är förtecknad i D-028; förklaringen finns också i användarguidens integritetsavsnitt.

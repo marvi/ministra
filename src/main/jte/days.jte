@@ -10,7 +10,7 @@
 @param Set<LocalDate> kept
 @param String error
 
-@template.layout(title = "Välj dagar", content = @`
+@template.layout(title = "Välj dagar", analytics = true, content = @`
     <h1>Vilka dagar gäller det?</h1>
     <p class="lede">${form.title()} · ${Dates.format(form.startDate())} –
         ${Dates.format(form.endDate())}</p>

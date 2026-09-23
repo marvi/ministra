@@ -4,4 +4,5 @@ Frågor och fynd som dyker upp mitt i ett arbete noteras här i stället för at
 det. Det som avgjorts flyttar till [docs/decisions.md](docs/decisions.md) eller
 [AGENTS.md](AGENTS.md) och stryks härifrån.
 
-Inga öppna frågor.
+- Vilken gallringstid ska den självhostade Umami-statistiken ha? Umami behåller data tills
+  den raderas om ingen egen gallring konfigureras.

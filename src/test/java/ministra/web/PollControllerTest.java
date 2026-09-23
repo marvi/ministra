@@ -109,7 +109,14 @@ class PollControllerTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString(
                         "property=\"og:url\" content=\"https://test.example\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString(
-                        "https://test.example/images/ministra-share.png")));
+                        "https://test.example/images/ministra-share.png")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "src=\"/js/umami-2026-09-23.js\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "data-host-url=\"https://umami.marvi.work\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString(
+                                "src=\"https://umami.marvi.work/script.js\""))));
     }
 
     @Test
@@ -120,10 +127,20 @@ class PollControllerTest {
     }
 
     @Test
+    void robots_allows_linkedin_preview_but_blocks_capability_urls() throws Exception {
+        mvc.perform(get("/robots.txt"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "User-agent: LinkedInBot\nDisallow: /s/\nDisallow: /a/\nAllow: /")));
+    }
+
+    @Test
     void guide_view_is_shown() throws Exception {
         mvc.perform(get("/guide"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Användarguide")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Användarguide")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Anonym besöksstatistik")));
     }
 
     @Test
@@ -210,6 +227,41 @@ class PollControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.not(
                         org.hamcrest.Matchers.containsString("property=\"og:url\""))));
+    }
+
+    @Test
+    void response_view_loads_sanitized_analytics_but_admin_does_not() throws Exception {
+        var subject = poll();
+        given(polls.byResponseToken("SVARSTOKEN")).willReturn(subject);
+        given(polls.byAdminToken("ADMINTOKEN")).willReturn(subject);
+        given(polls.view(subject)).willReturn(new PollView(subject, List.of(), List.of()));
+
+        mvc.perform(get("/s/SVARSTOKEN"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "src=\"/js/umami-privacy.js\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "src=\"/js/umami-2026-09-23.js\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("umami-event.js"))));
+        mvc.perform(get("/a/ADMINTOKEN"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("umami-2026-09-23.js"))));
+    }
+
+    @Test
+    void thank_you_view_tracks_one_submitted_response() throws Exception {
+        var subject = poll();
+        given(polls.byResponseToken("SVARSTOKEN")).willReturn(subject);
+        given(polls.view(subject)).willReturn(new PollView(subject, List.of(), List.of()));
+
+        mvc.perform(get("/s/SVARSTOKEN").param("tack", ""))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "src=\"/js/umami-event.js\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "data-event=\"response-submitted\"")));
     }
 
     @Test
