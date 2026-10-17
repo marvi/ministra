@@ -1,5 +1,6 @@
 @import java.util.List
 @import java.util.Map
+@import java.time.DayOfWeek
 @import ministra.calendar.ServiceDay
 @import ministra.poll.CreatePollForm
 @import ministra.calendar.Dates
@@ -74,6 +75,24 @@
         @if(errors.containsKey("endDate"))
             <p class="field-error">${errors.get("endDate")}</p>
         @endif
+
+        <div class="field">
+            <label class="field-label" for="weekday">Vilken veckodag?</label>
+            <span class="hint" id="weekday-hint">Alla datum på vald veckodag mellan första och sista dagen.
+                Söndagar tar även med kyrkoårets övriga helgdagar.</span>
+            <select id="weekday" name="weekday" required aria-describedby="weekday-hint">
+                <option value="SUNDAY" selected="${form.weekday() == DayOfWeek.SUNDAY}">Söndagar</option>
+                <option value="MONDAY" selected="${form.weekday() == DayOfWeek.MONDAY}">Måndagar</option>
+                <option value="TUESDAY" selected="${form.weekday() == DayOfWeek.TUESDAY}">Tisdagar</option>
+                <option value="WEDNESDAY" selected="${form.weekday() == DayOfWeek.WEDNESDAY}">Onsdagar</option>
+                <option value="THURSDAY" selected="${form.weekday() == DayOfWeek.THURSDAY}">Torsdagar</option>
+                <option value="FRIDAY" selected="${form.weekday() == DayOfWeek.FRIDAY}">Fredagar</option>
+                <option value="SATURDAY" selected="${form.weekday() == DayOfWeek.SATURDAY}">Lördagar</option>
+            </select>
+            @if(errors.containsKey("weekday"))
+                <p class="field-error">${errors.get("weekday")}</p>
+            @endif
+        </div>
 
         <div class="field">
             <label class="field-label" for="comment">Kommentar</label>

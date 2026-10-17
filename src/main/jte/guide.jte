@@ -10,13 +10,14 @@
     <ul>
         <li><strong>Vad gäller det?</strong> En tydlig titel, till exempel <em>"Textläsare hösten 2026"</em> eller <em>"Sakristaner fram till påsk"</em>.</li>
         <li><strong>Första och sista dagen:</strong> Välj start- och slutdatum för perioden. Perioden kan sträcka sig upp till ett halvår framåt.</li>
+        <li><strong>Vilken veckodag?</strong> Söndagar är förvalt och tar även med kyrkoårets övriga helgdagar. Välj exempelvis Onsdagar för att få alla onsdagar mellan första och sista dagen.</li>
         <li><strong>Kommentar:</strong> Valfri förklarande text. Denna text följer med i det förberedda inbjudningsmejlet du kan skicka till deltagarna.</li>
         <li><strong>Ditt förnamn och e-postadress:</strong> Din e-postadress används för att skicka dina länkar till dig och för en samlad sammanfattning när nya svar kommer in. Deltagarnas e-postadresser samlas aldrig in.</li>
         <li><strong>Spara förfrågan i:</strong> Välj om förfrågan ska vara giltig i 1 eller 2 månader. Därefter raderas förfrågan och alla svar automatiskt.</li>
     </ul>
 
     <h2>3. Välj gudstjänstdagar (Steg två)</h2>
-    <p>När du klickar på <em>Fortsätt</em> visas alla kyrkoårets liturgiska gudstjänstdagar i din valda period (inte bara söndagar, utan även exempelvis Juldagen, Långfredagen, Kristi himmelsfärds dag och Annandag pingst):</p>
+    <p>När du klickar på <em>Fortsätt</em> visas dagförslaget för vald veckodag i perioden. Med förvalet Söndagar ingår även exempelvis Juldagen, Långfredagen, Kristi himmelsfärds dag och Annandag pingst:</p>
     <ul>
         <li><strong>Välj bort dagar:</strong> Klicka på en dag för att välja bort den om ni inte har gudstjänst eller inte behöver bemanning den dagen.</li>
         <li><strong>Lägg till egna datum:</strong> Om församlingen firar ett lokalt helgon, en egen högtid eller en extra gudstjänst kan du ange datumet längst ned och klicka på <em>Lägg till datum</em>.</li>

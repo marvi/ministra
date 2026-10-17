@@ -1,5 +1,6 @@
 package ministra.poll;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -81,6 +82,9 @@ public class PollService {
         if (start == null || end == null) {
             throw new SubmissionException("Välj både en start- och en slutdag.");
         }
+        if (form.weekday() == null) {
+            throw new SubmissionException("Välj en veckodag.");
+        }
         if (!start.isAfter(today)) {
             throw new SubmissionException("Startdagen måste ligga i framtiden.");
         }
@@ -93,17 +97,22 @@ public class PollService {
         }
     }
 
-    /** Alla gudstjänstdagar i formulärets period, innan skaparen valt bort något. */
+    /**
+     * Dagförslaget innan skaparen valt bort något. Söndagsförvalet behåller kyrkoårets
+     * övriga gudstjänstdagar (D-040); andra veckodagar ger bara den veckodagen (D-051).
+     */
     public List<ServiceDay> daysBetween(CreatePollForm form) {
-        return calendar.serviceDaysBetween(form.startDate(), form.endDate());
+        return form.weekday() == DayOfWeek.SUNDAY
+                ? calendar.serviceDaysBetween(form.startDate(), form.endDate())
+                : calendar.weekdaysBetween(form.startDate(), form.endDate(), form.weekday());
     }
 
     /**
-     * Dagarna som dagvalssidan visar: kyrkoårets dagar plus dem skaparen lagt till.
+     * Dagarna som dagvalssidan visar: veckodagens förslag plus dem skaparen lagt till.
      *
      * <p>Kryssrutorna avgör sedan vilka som blir kvar. Det är därför {@link #create}
      * klarar sig med en enda mängd — bortvalda och tillagda faller ut ur jämförelsen mot
-     * kyrkoåret.
+     * kyrkoåret, oavsett vilken veckodag förslaget gäller.
      */
     public List<ServiceDay> candidateDays(CreatePollForm form, Set<LocalDate> added) {
         return withExtras(daysBetween(form), added);
@@ -154,7 +163,7 @@ public class PollService {
         }
 
         var churchDays =
-                daysBetween(form).stream()
+                calendar.serviceDaysBetween(form.startDate(), form.endDate()).stream()
                         .map(ServiceDay::date)
                         .collect(Collectors.toCollection(LinkedHashSet::new));
         var excluded =

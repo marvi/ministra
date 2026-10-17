@@ -1,6 +1,9 @@
 package ministra.calendar;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.Period;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -55,6 +58,22 @@ public class ChurchCalendar {
         }
         days.sort(Comparator.comparing(ServiceDay::date));
         return List.copyOf(days);
+    }
+
+    /** Alla datum på vald veckodag inom perioden, med kyrkoårsnamn när API:t har ett. */
+    public List<ServiceDay> weekdaysBetween(LocalDate from, LocalDate to, DayOfWeek weekday) {
+        if (from.isAfter(to)) {
+            return List.of();
+        }
+        if (from.getYear() < FIRST_SUPPORTED_YEAR) {
+            throw new IllegalArgumentException(
+                    "Kyrkoåret stöds från och med " + FIRST_SUPPORTED_YEAR + ", fick " + from.getYear());
+        }
+        var first = from.with(TemporalAdjusters.nextOrSame(weekday));
+        if (first.isAfter(to)) {
+            return List.of();
+        }
+        return first.datesUntil(to.plusDays(1), Period.ofWeeks(1)).map(this::dayAt).toList();
     }
 
     /**

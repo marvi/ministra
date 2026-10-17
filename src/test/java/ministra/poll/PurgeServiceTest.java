@@ -2,6 +2,7 @@ package ministra.poll;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +37,7 @@ class PurgeServiceTest extends PostgresTest {
                         null,
                         LocalDate.of(2026, 10, 4),
                         LocalDate.of(2026, 11, 1),
+                        DayOfWeek.SUNDAY,
                         1,
                         "Markus",
                         "markus@example.se"),
@@ -53,7 +55,7 @@ class PurgeServiceTest extends PostgresTest {
     private java.util.Set<java.time.LocalDate> allDates(LocalDate from, LocalDate to) {
         return polls
                 .daysBetween(
-                        new CreatePollForm("x", null, from, to, 1, "Markus", "markus@example.se"))
+                        new CreatePollForm("x", null, from, to, DayOfWeek.SUNDAY, 1, "Markus", "markus@example.se"))
                 .stream()
                 .map(ministra.calendar.ServiceDay::date)
                 .collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new));

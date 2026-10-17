@@ -2,6 +2,7 @@ package ministra.poll;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,6 +57,7 @@ class PollServiceDetachedTest extends PostgresTest {
                         null,
                         LocalDate.of(2026, 10, 4),
                         LocalDate.of(2026, 11, 1),
+                        DayOfWeek.SUNDAY,
                         1,
                         "Markus",
                         "markus@example.se"),
@@ -78,7 +80,7 @@ class PollServiceDetachedTest extends PostgresTest {
     private java.util.Set<java.time.LocalDate> allDates(LocalDate from, LocalDate to) {
         return polls
                 .daysBetween(
-                        new CreatePollForm("x", null, from, to, 1, "Markus", "markus@example.se"))
+                        new CreatePollForm("x", null, from, to, DayOfWeek.SUNDAY, 1, "Markus", "markus@example.se"))
                 .stream()
                 .map(ministra.calendar.ServiceDay::date)
                 .collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new));
@@ -91,6 +93,31 @@ class PollServiceDetachedTest extends PostgresTest {
         var participant = polls.submit(poll, "Anna", allAnswered(poll, Availability.CAN));
 
         assertThat(participant.getName()).isEqualTo("Anna");
+    }
+
+    @Test
+    void weekday_dates_survive_reloading_and_can_be_answered_without_the_sundays() {
+        var form = new CreatePollForm(
+                "Onsdagsmässor", null,
+                LocalDate.of(2026, 12, 20), LocalDate.of(2027, 1, 10),
+                DayOfWeek.WEDNESDAY, 1, "Markus", "markus@example.se");
+        var kept = polls.daysBetween(form).stream()
+                .map(ministra.calendar.ServiceDay::date)
+                .collect(java.util.stream.Collectors.toSet());
+
+        var poll = reloaded(polls.create(form, TODAY, kept));
+
+        assertThat(polls.daysOf(poll)).extracting(ministra.calendar.ServiceDay::date)
+                .containsExactly(
+                        LocalDate.of(2026, 12, 23),
+                        LocalDate.of(2026, 12, 30),
+                        LocalDate.of(2027, 1, 6));
+        assertThat(polls.daysOf(poll).getLast().name()).isEqualTo("Trettondedag jul");
+        var participant = polls.submit(poll, "Anna", allAnswered(poll, Availability.CAN));
+        assertThat(participant.getResponses()).extracting(Response::getServiceDate)
+                .containsExactlyInAnyOrderElementsOf(kept);
+        assertThat(polls.view(reloaded(poll)).days())
+                .allSatisfy(row -> assertThat(row.can()).containsExactly("Anna"));
     }
 
     @Test

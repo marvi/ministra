@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -215,7 +216,11 @@ public class PollController {
     private static Map<String, String> fieldErrors(BindingResult binding) {
         var errors = new LinkedHashMap<String, String>();
         binding.getFieldErrors()
-                .forEach(error -> errors.putIfAbsent(error.getField(), error.getDefaultMessage()));
+                .forEach(error -> errors.putIfAbsent(
+                        error.getField(),
+                        error.getField().equals("weekday")
+                                ? "Välj en veckodag."
+                                : error.getDefaultMessage()));
         return errors;
     }
 
@@ -419,7 +424,7 @@ public class PollController {
     }
 
     private static CreatePollForm emptyForm() {
-        return new CreatePollForm(null, null, null, null, 1, null, null);
+        return new CreatePollForm(null, null, null, null, DayOfWeek.SUNDAY, 1, null, null);
     }
 
     /**

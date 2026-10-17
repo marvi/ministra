@@ -11,6 +11,7 @@
 <input type="hidden" name="comment" value="${form.comment() == null ? "" : form.comment()}">
 <input type="hidden" name="startDate" value="${form.startDate().toString()}">
 <input type="hidden" name="endDate" value="${form.endDate().toString()}">
+<input type="hidden" name="weekday" value="${form.weekday().name()}">
 <input type="hidden" name="validMonths" value="${form.validMonths()}">
 <input type="hidden" name="creatorName" value="${form.creatorName()}">
 <input type="hidden" name="creatorEmail" value="${form.creatorEmail()}">

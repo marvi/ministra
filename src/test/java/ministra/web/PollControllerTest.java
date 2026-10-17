@@ -10,12 +10,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Set;
 import ministra.MinistraProperties;
 import ministra.calendar.ServiceDay;
 import ministra.mail.MailTexts;
@@ -96,6 +99,71 @@ class PollControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Ny förfrågan")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("/guide")));
+    }
+
+    @Test
+    void create_form_offers_every_weekday_with_sunday_selected() throws Exception {
+        var html = mvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertThat(html).contains("value=\"SUNDAY\" selected", ">Söndagar</option>", ">Onsdagar</option>");
+        for (var weekday : DayOfWeek.values()) {
+            assertThat(html).contains("value=\"" + weekday.name() + "\"");
+        }
+    }
+
+    @Test
+    void weekday_choice_survives_validation_errors() throws Exception {
+        mvc.perform(withForm(post("/skapa"), "10.0.1.1", "WEDNESDAY")
+                        .param("creatorEmail", "inte-en-adress"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"WEDNESDAY\" selected")));
+    }
+
+    @Test
+    void invalid_weekday_is_rejected_in_swedish_at_every_creation_step() throws Exception {
+        for (var path : List.of("/skapa", "/skapa/dagar", "/skapa/spara")) {
+            mvc.perform(withForm(post(path), "10.0.1.2", "NOT_A_DAY"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(org.hamcrest.Matchers.containsString("Välj en veckodag.")));
+        }
+        org.mockito.Mockito.verify(polls, org.mockito.Mockito.never()).create(any(), any(), any());
+        org.mockito.Mockito.verify(polls, org.mockito.Mockito.never()).candidateDays(any(), any());
+    }
+
+    @Test
+    void weekday_choice_is_carried_in_both_day_choice_forms_and_the_htmx_fragment() throws Exception {
+        given(polls.candidateDays(any(), any()))
+                .willReturn(List.of(new ServiceDay(LocalDate.of(2026, 10, 7))));
+
+        for (var fragment : List.of(false, true)) {
+            var request = fragment
+                    ? withForm(post("/skapa/dagar"), "10.0.1.3", "WEDNESDAY").header("HX-Request", "true")
+                            .param("extraDate", "2026-10-09")
+                    : withForm(post("/skapa"), "10.0.1.3", "WEDNESDAY");
+            var html = mvc.perform(request)
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+
+            assertThat(html.split("name=\"weekday\" value=\"WEDNESDAY\"", -1)).hasSize(3);
+            assertThat(html).contains("onsdag 7 oktober 2026");
+        }
+        org.mockito.Mockito.verify(polls, org.mockito.Mockito.times(2)).candidateDays(
+                org.mockito.ArgumentMatchers.argThat(form -> form.weekday() == DayOfWeek.WEDNESDAY), any());
+    }
+
+    @Test
+    void weekday_choice_and_selected_dates_reach_saving() throws Exception {
+        given(polls.create(any(), any(), any())).willReturn(poll());
+
+        mvc.perform(withForm(post("/skapa/spara"), "10.0.1.4", "WEDNESDAY").param("day", "2026-10-07"))
+                .andExpect(redirectedUrl("/a/ADMINTOKEN"));
+
+        org.mockito.Mockito.verify(polls).create(
+                org.mockito.ArgumentMatchers.argThat(form -> form.weekday() == DayOfWeek.WEDNESDAY),
+                org.mockito.ArgumentMatchers.eq(LocalDate.of(2026, 9, 9)),
+                org.mockito.ArgumentMatchers.eq(Set.of(LocalDate.of(2026, 10, 7))));
     }
 
     @Test
@@ -546,11 +614,19 @@ class PollControllerTest {
     private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder withForm(
             org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder request,
             String clientIp) {
+        return withForm(request, clientIp, "SUNDAY");
+    }
+
+    private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder withForm(
+            org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder request,
+            String clientIp,
+            String weekday) {
         return request
                 .header("X-Forwarded-For", clientIp)
                 .param("title", "Sakristaner")
                 .param("startDate", "2026-10-04")
                 .param("endDate", "2026-11-01")
+                .param("weekday", weekday)
                 .param("validMonths", "1")
                 .param("creatorName", "Markus")
                 .param("creatorEmail", "markus@example.se");

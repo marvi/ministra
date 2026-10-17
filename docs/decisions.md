@@ -754,14 +754,15 @@ schemat följa med utan ett extra manuellt steg som kan glömmas bort.
 
 ## D-040 — Alla gudstjänstdagar, inte bara söndagar
 
-Listan innehåller varje dag kyrkoåret firar med gudstjänst — inte bara söndagar. Juldagen,
-annandag jul, Långfredagen, Kristi himmelsfärds dag, Annandag pingst, Midsommardagen,
+Förvalet **Söndagar** innehåller varje dag kyrkoåret firar med gudstjänst — inte bara
+söndagar. Juldagen, annandag jul, Långfredagen, Kristi himmelsfärds dag, Annandag pingst, Midsommardagen,
 Alla helgons dag och Trettondedag jul behöver bemanning precis som en söndag. Annandag
 pingst är inte allmän helgdag, men firas ändå.
 
-Urvalet görs på typen i lektionarium-API:t: `day instanceof HolyDay`. Filtrera inte på
-`DayOfWeek.SUNDAY`. API:t skiljer redan på `HolyDay` och `OrdinaryDay`, och vardagarna i
-Stilla veckan är `OrdinaryDay` — de faller därmed bort av sig själva. Varje söndag är en
+Urvalet för söndagsförvalet görs på typen i lektionarium-API:t: `day instanceof HolyDay`,
+inte på `DayOfWeek.SUNDAY`. Andra veckodagar väljs enligt D-051. API:t skiljer redan på
+`HolyDay` och `OrdinaryDay`, och vardagarna i Stilla veckan är `OrdinaryDay` — de faller
+därmed bort av sig själva. Varje söndag är en
 `HolyDay`; verifierat för 2026 till 2030. Ett år har ungefär 66 gudstjänstdagar, varav 52
 söndagar.
 
@@ -788,10 +789,10 @@ finns.
 
 Skapandet sker i två steg:
 
-1. **Uppgifterna.** Titel, kommentar, period, namn, e-post och giltighetstid. Ingenting
-   sparas.
-2. **Dagarna.** Alla gudstjänstdagar i perioden visas förkryssade. Skaparen klickar bort
-   dem som inte ska med — de gråmarkeras och stryks över, och går att klicka tillbaka.
+1. **Uppgifterna.** Titel, kommentar, period, veckodag, namn, e-post och giltighetstid.
+   Ingenting sparas.
+2. **Dagarna.** Dagförslaget för den valda veckodagen visas förkryssat (D-051). Skaparen
+   klickar bort dem som inte ska med — de gråmarkeras och stryks över, och går att klicka tillbaka.
    Först vid **Spara** skapas förfrågan.
 
 Därefter landar skaparen på admin-vyn med länkarna och sin egen namnruta förifylld
@@ -1201,3 +1202,22 @@ testtrafik borta, och `data-do-not-track=true` respekterar webbläsarens DNT-ins
 
 Umami använder inga kakor. Den lagrade statistiken och IP-adressens tillfälliga användning
 är förtecknad i D-028; förklaringen finns också i användarguidens integritetsavsnitt.
+
+## D-051 — Veckodagsval som förslag i skapandet
+
+Första sidan har ett val av en veckodag. **Söndagar** är förvalt och behåller kyrkoårets
+samtliga gudstjänstdagar enligt D-040. Väljs en annan veckodag, exempelvis **Onsdagar**,
+föreslås bara alla datum på den veckodagen inom den valda perioden. Periodens start- och
+slutval är desamma som tidigare; en onsdag före start eller efter slut tas inte med.
+Skaparen kan fortfarande välja bort dagar och lägga till egna datum i nästa steg.
+
+Veckodagen är ett sätt att fylla dagförslaget, ingen ny egenskap hos en sparad förfrågan.
+Vid sparandet jämförs de behållna datumen med kyrkoårets gudstjänstdagar, oavsett vald
+veckodag. Resultatet lagras i befintliga `excluded_day` och `extra_day` (D-042, D-043).
+På så vis överlever onsdagslistan en omladdning utan en ny kolumn, dagstabell eller
+migrering, och befintliga förfrågningar behåller sina dagar.
+
+Datum på andra veckodagar namnges med `ChurchCalendar.dayAt`, enbart när lektionarium
+känner det exakta datumet (D-043). Annars visas veckodag och datum utan kyrkoårsnamn.
+Valet följer med som dolt formulärfält i både sparandet och tillägg av egna datum, även
+med htmx. Hela flödet fungerar utan JavaScript (D-003).

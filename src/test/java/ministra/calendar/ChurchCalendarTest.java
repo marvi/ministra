@@ -6,11 +6,54 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 /** Ren JUnit, ingen Spring-kontext. Kalendern har inga beroenden att koppla upp. */
 class ChurchCalendarTest {
 
     private final ChurchCalendar calendar = new ChurchCalendar();
+
+    @ParameterizedTest
+    @EnumSource(DayOfWeek.class)
+    void includes_only_the_chosen_weekday_in_date_order(DayOfWeek weekday) {
+        var from = LocalDate.of(2026, 12, 20);
+        var to = LocalDate.of(2027, 1, 10);
+        var expected = from.datesUntil(to.plusDays(1))
+                .filter(date -> date.getDayOfWeek() == weekday)
+                .toList();
+
+        assertThat(calendar.weekdaysBetween(from, to, weekday)).extracting(ServiceDay::date)
+                .containsExactlyElementsOf(expected);
+    }
+
+    @Test
+    void weekday_dates_have_names_only_when_the_api_knows_the_exact_date() {
+        var days = calendar.weekdaysBetween(
+                LocalDate.of(2027, 3, 21), LocalDate.of(2027, 4, 4), DayOfWeek.WEDNESDAY);
+
+        assertThat(days).extracting(ServiceDay::date)
+                .containsExactly(LocalDate.of(2027, 3, 24), LocalDate.of(2027, 3, 31));
+        assertThat(days.getFirst().name()).isEqualTo("Onsdag i Stilla veckan");
+        assertThat(days.getLast().hasName()).isFalse();
+    }
+
+    @Test
+    void weekday_range_may_have_no_matching_dates() {
+        var sunday = LocalDate.of(2026, 10, 4);
+
+        assertThat(calendar.weekdaysBetween(sunday, sunday, DayOfWeek.WEDNESDAY)).isEmpty();
+        assertThat(calendar.weekdaysBetween(sunday, sunday.minusWeeks(1), DayOfWeek.WEDNESDAY))
+                .isEmpty();
+    }
+
+    @Test
+    void weekday_range_rejects_years_the_api_does_not_support() {
+        assertThatThrownBy(() -> calendar.weekdaysBetween(
+                LocalDate.of(2003, 1, 1), LocalDate.of(2003, 3, 1), DayOfWeek.WEDNESDAY))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("2004");
+    }
 
     @Test
     void includes_holy_days_that_are_not_sundays() {

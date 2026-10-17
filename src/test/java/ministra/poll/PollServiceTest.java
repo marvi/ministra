@@ -3,6 +3,7 @@ package ministra.poll;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,11 +33,16 @@ class PollServiceTest extends PostgresTest {
     @Autowired ParticipantRepository participants;
 
     private CreatePollForm form(LocalDate start, LocalDate end) {
+        return form(start, end, DayOfWeek.SUNDAY);
+    }
+
+    private CreatePollForm form(LocalDate start, LocalDate end, DayOfWeek weekday) {
         return new CreatePollForm(
                 "Sakristaner fram till påsk",
                 "Hör av dig vid frågor.",
                 start,
                 end,
+                weekday,
                 1,
                 "Markus",
                 "markus@example.se");
@@ -147,6 +153,51 @@ class PollServiceTest extends PostgresTest {
 
         assertThat(offered).isNotEmpty();
         assertThat(offered.getFirst().date()).isAfter(sunday);
+    }
+
+    @Test
+    void wednesday_choice_proposes_every_wednesday_between_the_selected_sundays() {
+        var form = form(LocalDate.of(2026, 12, 20), LocalDate.of(2027, 1, 10), DayOfWeek.WEDNESDAY);
+
+        assertThat(polls.daysBetween(form)).extracting(ServiceDay::date)
+                .containsExactly(
+                        LocalDate.of(2026, 12, 23),
+                        LocalDate.of(2026, 12, 30),
+                        LocalDate.of(2027, 1, 6));
+    }
+
+    @Test
+    void weekday_choice_still_allows_adding_dates_and_removing_proposed_days() {
+        var form = form(LocalDate.of(2026, 10, 4), LocalDate.of(2026, 11, 1), DayOfWeek.WEDNESDAY);
+        var added = LocalDate.of(2026, 10, 9);
+        var dropped = LocalDate.of(2026, 10, 14);
+        var kept = allDates(form);
+        kept.remove(dropped);
+        kept.add(added);
+
+        assertThat(polls.candidateDays(form, Set.of(added))).extracting(ServiceDay::date)
+                .contains(added, dropped);
+        var poll = polls.create(form, TODAY, kept);
+
+        assertThat(polls.daysOf(poll)).extracting(ServiceDay::date)
+                .containsExactly(
+                        LocalDate.of(2026, 10, 7),
+                        added,
+                        LocalDate.of(2026, 10, 21),
+                        LocalDate.of(2026, 10, 28));
+    }
+
+    @Test
+    void sunday_choice_keeps_the_other_holy_days() {
+        var form = form(LocalDate.of(2026, 12, 20), LocalDate.of(2026, 12, 27));
+
+        assertThat(polls.daysBetween(form)).extracting(ServiceDay::date)
+                .containsExactly(
+                        LocalDate.of(2026, 12, 20),
+                        LocalDate.of(2026, 12, 24),
+                        LocalDate.of(2026, 12, 25),
+                        LocalDate.of(2026, 12, 26),
+                        LocalDate.of(2026, 12, 27));
     }
 
     // ---------- Lägga till egna dagar (D-043) ----------

@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -25,6 +26,7 @@ public record CreatePollForm(
                 LocalDate startDate,
         @NotNull(message = "Välj sista dagen.") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
                 LocalDate endDate,
+        @NotNull(message = "Välj en veckodag.") DayOfWeek weekday,
         @Min(value = 1, message = "Välj en eller två månader.")
                 @Max(value = 2, message = "Välj en eller två månader.")
                 int validMonths,

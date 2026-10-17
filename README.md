@@ -18,11 +18,13 @@ som faktiskt läser texten den 18 oktober gör en människa, med listan framför
 ## Så fungerar det
 
 **1. Någon skapar en förfrågan.** Väljer period, ger den en titel — "Sakristaner fram
-till påsk" — och anger sitt förnamn och sin e-postadress.
+till påsk" — och anger sitt förnamn och sin e-postadress. Väljer också veckodag, med
+**Söndagar** som förval. Väljer man exempelvis **Onsdagar** föreslås alla onsdagar i perioden.
 
-**2. Väljer dagar.** Nästa skärm visar alla dagar kyrkoåret firar med gudstjänst i
-perioden. Inte bara söndagar: juldagen, annandagarna, Långfredagen, Kristi himmelsfärds
-dag, Annandag pingst och de andra finns med. Dagar ni inte bemannar klickar man bort, och
+**2. Väljer dagar.** Nästa skärm visar dagarna för vald veckodag i perioden.
+Söndagsförvalet tar även med kyrkoårets övriga gudstjänstdagar: juldagen, annandagarna,
+Långfredagen, Kristi himmelsfärds dag, Annandag pingst och de andra. Dagar ni inte bemannar
+klickar man bort, och
 firar församlingen något eget — ett lokalt helgon, en egen högtid — lägger man till det
 datumet. Först nu skapas förfrågan.
 

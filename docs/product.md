@@ -24,7 +24,9 @@ Den skall fungera lika bra på mobil som på skärm.
 
 Går in, väljer första och sista dagen — högst ett halvår. Anger en titel, som är det
 enda som säger vad förfrågan gäller: "Sakristaner fram till påsk". Dessutom en valfri
-kommentar.
+kommentar. Väljer veckodag, med **Söndagar** som förval. Söndagsförvalet tar även med
+kyrkoårets övriga gudstjänstdagar; **Onsdagar** ger exempelvis alla onsdagar mellan
+periodens första och sista dag.
 
 Anger sitt förnamn och sin e-postadress. Adressen är vägen tillbaka till förfrågan.
 Förnamnet behövs för att skaparen nästan alltid själv är med i gruppen och ska kunna
@@ -36,7 +38,7 @@ Ingenting sparas i det här steget.
 
 ### 2. Och väljer dagar
 
-Nästa skärm visar alla dagar i perioden, förkryssade. Ingen församling bemannar allt — vi
+Nästa skärm visar dagförslaget för vald veckodag, förkryssat. Ingen församling bemannar allt — vi
 använder inte förbedjare på Alla helgons dag eller under fastan, utom på Jungfru Marie
 bebådelsedag, och extra helgdagar som ingen ska ta förvirrar bara den som ska svara.
 Skaparen klickar bort dem som inte ska med; de dämpas och stryks över, och går att klicka
@@ -75,10 +77,9 @@ mer än nödvändigt, och därför ska deltagarna aldrig hamna i databasen som a
 
 ### 4. Deltagarna svarar
 
-Den som får mejlet klickar på länken och ser en enkel vy med alla dagar i perioden — inte
-bara söndagar, utan varje dag kyrkoåret firar med gudstjänst: juldagen, annandagarna,
-Långfredagen, Kristi himmelsfärds dag, Annandag pingst och de andra. Varje rad visar dagens
-namn och datum. Tre val per dag, som ett trafikljus:
+Den som får mejlet klickar på länken och ser en enkel vy med de dagar skaparen valt.
+Varje rad visar veckodag och datum, och dagens kyrkoårsnamn när det finns. Tre val per
+dag, som ett trafikljus:
 
 | Val | Färg | Betydelse |
 |---|---|---|
