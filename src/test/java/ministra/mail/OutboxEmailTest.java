@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -15,7 +16,7 @@ class OutboxEmailTest {
     private static final Instant NOW = Instant.parse("2026-09-09T20:00:00Z");
 
     private OutboxEmail email() {
-        return new OutboxEmail("markus@example.se", "Ämne", "Text");
+        return new OutboxEmail("markus@example.se", "Ämne", "Text", LocalDate.of(2026, 10, 9));
     }
 
     @Test

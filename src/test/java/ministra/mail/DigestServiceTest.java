@@ -37,6 +37,10 @@ class DigestServiceTest extends PostgresTest {
     @Autowired ResponseRepository responses;
 
     private Poll createPoll(String title, String creatorEmail) {
+        return createPoll(title, creatorEmail, 1);
+    }
+
+    private Poll createPoll(String title, String creatorEmail, int validMonths) {
         return polls.create(
                 new CreatePollForm(
                         title,
@@ -44,7 +48,7 @@ class DigestServiceTest extends PostgresTest {
                         LocalDate.of(2026, 10, 4),
                         LocalDate.of(2026, 11, 1),
                         DayOfWeek.SUNDAY,
-                        1,
+                        validMonths,
                         "Markus",
                         creatorEmail),
                 TODAY,
@@ -117,6 +121,24 @@ class DigestServiceTest extends PostgresTest {
                     assertThat(email.getBody()).contains("Sakristaner");
                     assertThat(email.getBody()).contains("Textläsare");
                 });
+    }
+
+    @Test
+    void a_digest_for_several_polls_is_kept_until_the_last_one_expires() {
+        // Ett mejl som gett upp gallras efter den här dagen (D-030). Den förfrågan som går
+        // ut sist avgör, annars försvinner spåret medan en förfrågan ännu lever.
+        var first = createPoll("Sakristaner", "markus@example.se", 1);
+        var second = createPoll("Textläsare", "markus@example.se", 2);
+        answer(first, "Anna");
+        answer(second, "Bengt");
+
+        digests.queueDigests(NOW);
+
+        assertThat(outbox.findAll())
+                .filteredOn(email -> email.getSubject().startsWith("Nya svar"))
+                .singleElement()
+                .extracting(OutboxEmail::getValidUntil)
+                .isEqualTo(TODAY.plusMonths(2));
     }
 
     @Test

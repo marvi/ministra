@@ -361,6 +361,8 @@ public class PollController {
             var view = polls.view(poll);
             model.addAttribute("view", view);
             model.addAttribute("prefilledName", name);
+            // Valen följer med tillbaka, så att ett upptaget namn inte kostar alla dagar.
+            model.addAttribute("answers", parseAnswers(allParams));
             model.addAttribute("error", e.getMessage());
             model.addAttribute("thanked", false);
             if (admin) {

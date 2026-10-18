@@ -440,7 +440,7 @@ Fullständig förteckning. Tillkommer något ska den här listan uppdateras i sa
 | `Poll` | Skaparens e-postadress | Länkarna vid skapandet, daglig sammanfattning |
 | `Participant` | Förnamn | Identifierar svaret i listan |
 | `Response` | Datum och tillgänglighet | Själva syftet |
-| `outbox_email` | Mottagare och brödtext, med förnamn i | Tillfälligt, tills mejlet gått iväg ([D-030](#d-030--outbox-för-all-utgående-post)) |
+| `outbox_email` | Mottagare och brödtext, med förnamn i | Tillfälligt, tills mejlet gått iväg — eller, om det gett upp, tills förfrågan gått ut ([D-030](#d-030--outbox-för-all-utgående-post)) |
 
 Utanför appen: AhaSend är personuppgiftsbiträde för sammanfattningsmejlens innehåll, med
 retention satt till noll ([D-029](#d-029--ahasend-som-e-postleverantör-via-smtp)).
@@ -515,6 +515,11 @@ Utformning:
   annanstans.
 - Jobbet kör var minut, med backoff mellan försök och ett tak på antalet försök. Därefter
   lämnas raden och felet loggas — utan mottagaradress i loggen.
+- **En rad som gett upp gallras av nattpasset**, men först när förfrågan den gäller har
+  gått ut. Raden bär därför `valid_until`: förfrågans, eller i en sammanfattning den
+  senaste bland förfrågningarna i mejlet. Fram till dess ligger raden kvar som spår av
+  felet; därefter är den bara personuppgifter. En rad som fortfarande försöker rörs aldrig
+  — den sista sammanfattningen för en förfrågan som just gått ut skrivs samma kväll.
 - **Raden raderas när mejlet gått iväg.** Brödtexten innehåller förnamn, så den ska inte
   ligga kvar som ett arkiv ([D-028](#d-028--personuppgifter-vi-lagrar)).
 

@@ -3,11 +3,14 @@ package ministra.poll;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import ministra.PostgresTest;
 import ministra.TestBeans;
+import ministra.mail.OutboxEmail;
+import ministra.mail.OutboxRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
@@ -29,6 +32,7 @@ class PurgeServiceTest extends PostgresTest {
     @Autowired PollRepository pollRepository;
     @Autowired ParticipantRepository participants;
     @Autowired ResponseRepository responses;
+    @Autowired OutboxRepository outbox;
 
     private Poll createdOn(LocalDate created) {
         return polls.create(
@@ -96,5 +100,44 @@ class PurgeServiceTest extends PostgresTest {
 
         assertThat(participants.findAll()).isEmpty();
         assertThat(responses.findAll()).isEmpty();
+    }
+
+    // ---------- Mejl som gett upp (D-030) ----------
+
+    private OutboxEmail mail(LocalDate validUntil, int failures) {
+        var email = new OutboxEmail("markus@example.se", "Ämne", "Hej Anna", validUntil);
+        for (int i = 0; i < failures; i++) {
+            email.recordFailure("fel", Instant.parse("2026-09-09T20:00:00Z"));
+        }
+        return outbox.save(email);
+    }
+
+    @Test
+    void deletes_exhausted_mail_once_its_poll_has_expired() {
+        var email = mail(TODAY.minusDays(1), OutboxEmail.MAX_ATTEMPTS);
+
+        purge.purgeExpired(TODAY);
+
+        assertThat(outbox.findById(email.getId())).isEmpty();
+    }
+
+    @Test
+    void keeps_exhausted_mail_while_its_poll_is_still_valid() {
+        // Defensivt: spåret av felet ligger kvar så länge förfrågan lever.
+        var email = mail(TODAY, OutboxEmail.MAX_ATTEMPTS);
+
+        purge.purgeExpired(TODAY);
+
+        assertThat(outbox.findById(email.getId())).isPresent();
+    }
+
+    @Test
+    void never_deletes_mail_that_is_still_being_retried() {
+        // Sista sammanfattningen för en förfrågan som just gått ut skrivs samma kväll.
+        var email = mail(TODAY.minusDays(1), OutboxEmail.MAX_ATTEMPTS - 1);
+
+        purge.purgeExpired(TODAY);
+
+        assertThat(outbox.findById(email.getId())).isPresent();
     }
 }

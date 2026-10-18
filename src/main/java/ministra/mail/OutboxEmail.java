@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -43,6 +44,13 @@ public class OutboxEmail {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    /**
+     * Den senaste giltighetstiden bland förfrågningarna mejlet gäller. Ett uttömt mejl
+     * gallras först när den passerats, aldrig tidigare (D-030).
+     */
+    @Column(name = "valid_until", nullable = false, updatable = false)
+    private LocalDate validUntil;
+
     @Column(name = "next_attempt_at", nullable = false)
     private Instant nextAttemptAt;
 
@@ -56,10 +64,11 @@ public class OutboxEmail {
         // för JPA
     }
 
-    public OutboxEmail(String recipient, String subject, String body) {
+    public OutboxEmail(String recipient, String subject, String body, LocalDate validUntil) {
         this.recipient = recipient;
         this.subject = subject;
         this.body = body;
+        this.validUntil = validUntil;
         this.createdAt = Instant.now();
         this.nextAttemptAt = this.createdAt;
         this.attempts = 0;
@@ -95,6 +104,10 @@ public class OutboxEmail {
 
     public String getBody() {
         return body;
+    }
+
+    public LocalDate getValidUntil() {
+        return validUntil;
     }
 
     public Instant getNextAttemptAt() {

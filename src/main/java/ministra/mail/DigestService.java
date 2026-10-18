@@ -2,6 +2,7 @@ package ministra.mail;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -69,11 +70,19 @@ public class DigestService {
                 creatorName = entry.getKey().getCreatorName();
                 items.add(new MailTexts.DigestItem(entry.getKey(), List.copyOf(entry.getValue())));
             }
+            // Sammanfattningen kan gälla flera förfrågningar. Den som går ut sist avgör när
+            // ett mejl som gett upp får gallras (D-030).
+            var validUntil =
+                    items.stream()
+                            .map(item -> item.poll().getValidUntil())
+                            .max(Comparator.naturalOrder())
+                            .orElseThrow();
             outbox.save(
                     new OutboxEmail(
                             creator.getKey(),
                             texts.digestSubject(items),
-                            texts.digestBody(creatorName, items)));
+                            texts.digestBody(creatorName, items),
+                            validUntil));
         }
 
         // Aldrig adresser eller namn i loggen, bara antal.

@@ -14,6 +14,7 @@
 @param boolean canPropose = false
 @param boolean thanked = false
 @param boolean socialPreview = false
+@param java.util.Map<java.time.LocalDate, Availability> answers = java.util.Map.of()
 @param String socialUrl = null
 @param String socialImageUrl = null
 
@@ -118,6 +119,9 @@
 
         <fieldset class="days">
             @for(ServiceDayView row : view.days())
+                <%-- Ett avvisat svar visas med valen kvar. Den som fått "namnet är upptaget"
+                     ska bara behöva ändra namnet, inte fylla i alla dagar igen. --%>
+                !{var chosen = answers.get(row.day().date());}
                 <fieldset class="day">
                     <legend>
                         <span class="day-date">${Dates.formatWithWeekday(row.day().date())}</span>
@@ -129,21 +133,24 @@
                     <div class="choices">
                         <input type="radio" required
                                id="${row.day().date().toString()}-can"
-                               name="d-${row.day().date().toString()}" value="CAN">
+                               name="d-${row.day().date().toString()}" value="CAN"
+                               checked="${chosen == Availability.CAN}">
                         <label class="can" for="${row.day().date().toString()}-can">
                             <span class="check" aria-hidden="true">✓</span> ${Availability.CAN.label()}
                         </label>
 
                         <input type="radio" required
                                id="${row.day().date().toString()}-maybe"
-                               name="d-${row.day().date().toString()}" value="IF_NEEDED">
+                               name="d-${row.day().date().toString()}" value="IF_NEEDED"
+                               checked="${chosen == Availability.IF_NEEDED}">
                         <label class="maybe" for="${row.day().date().toString()}-maybe">
                             <span class="check" aria-hidden="true">✓</span> ${Availability.IF_NEEDED.label()}
                         </label>
 
                         <input type="radio" required
                                id="${row.day().date().toString()}-cannot"
-                               name="d-${row.day().date().toString()}" value="CANNOT">
+                               name="d-${row.day().date().toString()}" value="CANNOT"
+                               checked="${chosen == Availability.CANNOT}">
                         <label class="cannot" for="${row.day().date().toString()}-cannot">
                             <span class="check" aria-hidden="true">✓</span> ${Availability.CANNOT.label()}
                         </label>
@@ -183,15 +190,17 @@
     @if(admin)
         <h2>Radera förfrågan</h2>
         <div class="actions">
-            <button type="button" class="button danger" id="delete-start">Radera förfrågan</button>
+            <button type="button" class="button danger needs-js" id="delete-start">Radera förfrågan</button>
         </div>
-        <div class="confirm" id="delete-confirm" hidden>
+        <%-- Utan JavaScript står bekräftelsen framme, så att det ändå går att radera
+             (D-003). Skriptet döljer den bakom knappen ovanför (D-026). --%>
+        <div class="confirm" id="delete-confirm">
             <p class="error">Förfrågan <strong>${view.poll().getTitle()}</strong> och alla
                 ${view.participantCount()} svar raderas. Det går inte att ångra.</p>
             <form method="post" action="${adminBase}/radera">
                 <div class="actions">
                     <button type="submit" class="button danger">Ja, radera allt</button>
-                    <button type="button" class="button secondary" id="delete-cancel">Avbryt</button>
+                    <button type="button" class="button secondary needs-js" id="delete-cancel">Avbryt</button>
                 </div>
             </form>
         </div>

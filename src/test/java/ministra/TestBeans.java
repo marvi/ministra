@@ -55,7 +55,7 @@ public class TestBeans {
     }
 
     @Bean
-    PurgeService purgeService(PollRepository polls) {
-        return new PurgeService(polls);
+    PurgeService purgeService(PollRepository polls, OutboxRepository outbox) {
+        return new PurgeService(polls, outbox);
     }
 }

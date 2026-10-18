@@ -376,6 +376,66 @@ class PollControllerTest {
                         org.hamcrest.Matchers.containsString("Tack, ditt svar"))));
     }
 
+    @Test
+    void rejected_response_keeps_the_answers_already_chosen() throws Exception {
+        // Upptaget namn är det vanligaste felet. Då ska bara namnet behöva ändras.
+        var subject = poll();
+        var day = new ServiceDay(LocalDate.of(2026, 10, 4), "Den helige Mikaels dag");
+        var other = new ServiceDay(LocalDate.of(2026, 10, 11));
+        given(polls.byResponseToken("SVARSTOKEN")).willReturn(subject);
+        given(polls.view(subject)).willReturn(new PollView(
+                subject,
+                List.of(
+                        new ministra.poll.ServiceDayView(day, List.of(), List.of(), List.of()),
+                        new ministra.poll.ServiceDayView(other, List.of(), List.of(), List.of())),
+                List.of("Anna")));
+        willThrow(new SubmissionException("Det finns redan ett svar från \"Anna\"."))
+                .given(polls).submit(any(), anyString(), any());
+
+        var html = mvc.perform(post("/s/SVARSTOKEN")
+                        .param("name", "Anna")
+                        .param("d-2026-10-04", "IF_NEEDED")
+                        .param("d-2026-10-11", "CANNOT"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertThat(html).containsPattern("name=\"d-2026-10-04\" value=\"IF_NEEDED\"\\s+checked");
+        assertThat(html).containsPattern("name=\"d-2026-10-11\" value=\"CANNOT\"\\s+checked");
+        assertThat(html.split("\\bchecked\\b", -1)).hasSize(3);
+    }
+
+    @Test
+    void response_view_starts_with_nothing_chosen() throws Exception {
+        var subject = poll();
+        var day = new ServiceDay(LocalDate.of(2026, 10, 4), "Den helige Mikaels dag");
+        given(polls.byResponseToken("SVARSTOKEN")).willReturn(subject);
+        given(polls.view(subject)).willReturn(new PollView(
+                subject,
+                List.of(new ministra.poll.ServiceDayView(day, List.of(), List.of(), List.of())),
+                List.of()));
+
+        mvc.perform(get("/s/SVARSTOKEN"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("checked"))));
+    }
+
+    @Test
+    void delete_confirmation_is_reachable_without_javascript() throws Exception {
+        // Skriptet döljer bekräftelsen bakom en knapp. Utan skript ska den stå framme (D-003).
+        var subject = poll();
+        given(polls.byAdminToken("ADMINTOKEN")).willReturn(subject);
+        given(polls.view(subject)).willReturn(new PollView(subject, List.of(), List.of()));
+
+        var html = mvc.perform(get("/a/ADMINTOKEN"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertThat(html).contains("<div class=\"confirm\" id=\"delete-confirm\">");
+        assertThat(html).contains("class=\"button danger needs-js\" id=\"delete-start\"");
+        assertThat(html).contains("action=\"/a/ADMINTOKEN/radera\"");
+    }
+
     // ---------- Förslag på schema (D-046) ----------
 
     private PollView threeResponses(Poll subject) {

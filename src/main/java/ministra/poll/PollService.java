@@ -194,7 +194,10 @@ public class PollService {
         // Samma transaktion som förfrågan. Går den tillbaka finns inget mejl att skicka.
         outbox.save(
                 new OutboxEmail(
-                        poll.getCreatorEmail(), texts.creationSubject(poll), texts.creationBody(poll)));
+                        poll.getCreatorEmail(),
+                        texts.creationSubject(poll),
+                        texts.creationBody(poll),
+                        poll.getValidUntil()));
         log.info(
                 "Skapade förfrågan {}: {} dagar {}–{}, giltig till {}",
                 poll.getId(),
